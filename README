@@ -1,0 +1,40 @@
+/*******************************************************************************
+
+    Author ......... Eric Stewart
+    Contact ........ eric@ericdives.com
+    Home Site ...... http://runningoffatthemouth.com
+    Program ........ Unified Trees
+    Version ........ 0.1
+    Purpose ........ Pull Tree information from other Cacti installs
+
+*******************************************************************************/
+
+----[ Purpose
+
+    This plugin connects to the databases of other Cacti installs for tree
+graph information to unify them into one tree for display and navigation
+between Cacti instances.
+
+----[ Features
+
+	Other than the main purpose, none.
+
+----[ Installation
+
+	If you have not already done so, install the Plugin Architecture
+	http://cactiusers.org/wiki/PluginArchitectureInstall
+
+	Next install this Plugin using these directions
+	http://cactiusers.org/wiki/PluginsInstall
+
+	Provide each Cacti install SELECT access to the MySQL databases for
+every other install.
+
+	For more information on this plugin
+	http://runningoffatthemouth.com/
+
+
+----[ Changelog
+
+    --- 0.1 ---
+    Initial release.
