@@ -35,14 +35,14 @@
 */
 
 function plugin_unifiedtrees_install () {
-	api_plugin_register_hook('dpdiscover', 'config_arrays', 'dpdiscover_config_arrays', 'setup.php');
-	api_plugin_register_hook('dpdiscover', 'draw_navigation_text', 'dpdiscover_draw_navigation_text', 'setup.php');
-	api_plugin_register_hook('dpdiscover', 'config_settings', 'dpdiscover_config_settings', 'setup.php');
-	api_plugin_register_hook('dpdiscover', 'poller_bottom', 'dpdiscover_poller_bottom', 'setup.php');
-	api_plugin_register_hook('dpdiscover', 'utilities_action', 'dpdiscover_utilities_action', 'setup.php');
-	api_plugin_register_hook('dpdiscover', 'utilities_list', 'dpdiscover_utilities_list', 'setup.php');
+//	api_plugin_register_hook('dpdiscover', 'config_arrays', 'dpdiscover_config_arrays', 'setup.php');
+//	api_plugin_register_hook('dpdiscover', 'draw_navigation_text', 'dpdiscover_draw_navigation_text', 'setup.php');
+//	api_plugin_register_hook('dpdiscover', 'config_settings', 'dpdiscover_config_settings', 'setup.php');
+//	api_plugin_register_hook('dpdiscover', 'poller_bottom', 'dpdiscover_poller_bottom', 'setup.php');
+//	api_plugin_register_hook('dpdiscover', 'utilities_action', 'dpdiscover_utilities_action', 'setup.php');
+//	api_plugin_register_hook('dpdiscover', 'utilities_list', 'dpdiscover_utilities_list', 'setup.php');
 
-	api_plugin_register_realm('dpdiscover', 'dpdiscover.php,dpdiscover_template.php', 'View Host DPDiscover', 1);
+//	api_plugin_register_realm('dpdiscover', 'dpdiscover.php,dpdiscover_template.php', 'View Host DPDiscover', 1);
 
 	dpdiscover_setup_table();
 }
@@ -73,14 +73,15 @@ function unifiedtrees_check_upgrade () {
 	include_once($config["library_path"] . "/functions.php");
 
 	// Let's only run this check if we are on a page that actually needs the data
-	$files = array('plugins.php', 'dpdiscover.php', 'dpdiscover_template.php');
+	$files = array('plugins.php', 'tree_sources.php');
 	if (isset($_SERVER['PHP_SELF']) && !in_array(basename($_SERVER['PHP_SELF']), $files)) {
 		return;
 	}
 
-	$version = plugin_dpdiscover_version ();
+	$version = plugin_unifiedtrees_version ();
 	$current = $version['version'];
-	$old = read_config_option('plugin_dpdiscover_version');
+	$old = read_config_option('plugin_unifiedtrees_version');
+/*
 	if ($current != $old) {
 		$dpdiscover_columns = array_rekey(db_fetch_assoc("SHOW COLUMNS FROM plugin_dpdiscover_hosts"), "Field", "Field");
 		if (!in_array("snmp_version", $dpdiscover_columns)) {
@@ -104,9 +105,9 @@ function unifiedtrees_check_upgrade () {
 		if (!in_array("snmp_context", $dpdiscover_columns)) {
 			db_execute("ALTER TABLE plugin_dpdiscover_hosts ADD COLUMN snmp_context varchar(64) DEFAULT '' AFTER snmp_priv_protocol");
 		}
-
+*/
 		// Set the new version
-		db_execute("UPDATE plugin_config SET version='$current' WHERE directory='dpdiscover'");
+//		db_execute("UPDATE plugin_config SET version='$current' WHERE directory='unifiedtrees'");
 		db_execute("UPDATE plugin_config SET " .
 				"version='" . $version["version"] . "', " .
 				"name='" . $version["longname"] . "', " .
@@ -116,18 +117,18 @@ function unifiedtrees_check_upgrade () {
 	}
 }
 
-function plugin_dpdiscover_version () {
+function plugin_unifiedtrees_version () {
 	return array(
-		'name'     => 'dpdiscover',
-		'version'  => '1.0',
-		'longname' => 'DP Discover',
+		'name'     => 'unifiedtrees',
+		'version'  => '0.1',
+		'longname' => 'Unified Trees',
 		'author'   => 'Eric Stewart',
 		'homepage' => 'http://runningoffatthemouth.com/?p=1067',
 		'email'    => 'eric@ericdives.com',
 		'url'      => 'http://runningoffatthemouth.com/?p=1067'
 	);
 }
-
+/*
 function dpdiscover_utilities_action ($action) {
 	if ($action == 'dpdiscover_clear') {
 		mysql_query('DELETE FROM plugin_dpdiscover_hosts');
@@ -154,7 +155,6 @@ function dpdiscover_utilities_list () {
 	</tr>
 	<?php
 }
-
 function dpdiscover_config_settings () {
 	global $tabs, $settings, $dpdiscover_poller_frequencies;
 	$tabs["misc"] = "Misc";
@@ -163,7 +163,7 @@ function dpdiscover_config_settings () {
 		return;
 
 	$temp = array(
-		"dpdiscover_header" => array(
+		"unifiedtrees_header" => array(
 			"friendly_name" => "DPDiscover",
 			"method" => "spacer",
 			),
@@ -174,15 +174,6 @@ function dpdiscover_config_settings () {
 			"max_length" => 255,
 			"default" => ""
 			),
-/*		"dpdiscover_protocol" => array(
-			"friendly_name" => "Ping Method",
-			"description" => "This is the type of protocol used by Ping to determine if the host is responding.
-			Once it pings, it will be scanned for snmp availability.",
-			"method" => "drop_array",
-			"array" => array(0 => 'UDP', 1 => 'TCP', 2 => 'ICMP'),
-			"default" => 0
-			),
-*/
 		'dpdiscover_use_parent_snmp' => array(
 			'friendly_name' => "Attempt Parent SNMP Values",
 			'description' => "As new devices are detected from existing devices (a 'parent'), check this box if the parent's SNMP values should be used in an attempt to pull information from the new device.",
@@ -277,6 +268,7 @@ function dpdiscover_show_tab () {
 		}
 	}
 }
+*/
 
 function unifiedtrees_config_arrays () {
 	global $menu, $config;
@@ -287,12 +279,12 @@ function unifiedtrees_config_arrays () {
 
 	$temp = $menu["Utilities"]['logout.php'];
 	unset($menu["Utilities"]['logout.php']);
-	$menu["Utilities"]['plugins/unifiedtrees/unifiedtrees.php'] = "Unified Trees";
+	$menu["Utilities"]['plugins/unifiedtrees/tree_sources.php'] = "Unified Trees - Sources";
 	$menu["Utilities"]['logout.php'] = $temp;
 	}
 
 }
-
+/*
 function dpdiscover_draw_navigation_text ($nav) {
 	$nav["dpdiscover.php:"] = array("title" => "DPDiscover", "mapping" => "", "url" => "dpdiscover.php", "level" => "0");
 	$nav["dpdiscover_template.php:"] = array("title" => "DPDiscover Templates", "mapping" => "index.php:", "url" => "dpdiscover_template.php", "level" => "1");
@@ -301,39 +293,10 @@ function dpdiscover_draw_navigation_text ($nav) {
 	$nav["utilities.php:dpdiscover_clear"] = array("title" => "Clear Discover Results", "mapping" => "index.php:,utilities.php:", "url" => "dpdiscover.php", "level" => "1");
 	return $nav;
 }
-
-function dpdiscover_setup_table () {
+*/
+function unifiedtrees_setup_table () {
 	global $config, $database_default;
 	include_once($config["library_path"] . "/database.php");
-
-	$data = array();
-	$data['columns'][] = array('name' => 'hostname', 'type' => 'varchar(100)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'ip', 'type' => 'varchar(17)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'snmp_community', 'type' => 'varchar(100)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'snmp_version', 'type' => 'tinyint(1)', 'unsigned' => 'unsigned', 'NULL' => false, 'default' => '1');
-	$data['columns'][] = array('name' => 'snmp_username', 'type' => 'varchar(50)', 'NULL' => true);
-	$data['columns'][] = array('name' => 'snmp_password', 'type' => 'varchar(50)', 'NULL' => true);
-	$data['columns'][] = array('name' => 'snmp_auth_protocol', 'type' => 'char(5)', 'default' =>  '');
-	$data['columns'][] = array('name' => 'snmp_priv_passphrase', 'type' => 'varchar(200)', 'default' => '');
-	$data['columns'][] = array('name' => 'snmp_priv_protocol', 'type' => 'char(6)', 'default' => '');
-	$data['columns'][] = array('name' => 'snmp_context', 'type' => 'varchar(64)', 'default' => '');
-	$data['columns'][] = array('name' => 'sysName', 'type' => 'varchar(100)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'sysLocation', 'type' => 'varchar(255)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'sysContact', 'type' => 'varchar(255)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'sysDescr', 'type' => 'varchar(255)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'sysUptime', 'type' => 'int(32)', 'NULL' => false, 'default' => '0');
-	$data['columns'][] = array('name' => 'os', 'type' => 'varchar(64)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'added', 'type' => 'tinyint(4)', 'NULL' => false, 'default' => '0');
-	$data['columns'][] = array('name' => 'snmp_status', 'type' => 'tinyint(4)', 'NULL' => false, 'default' => '0');
-	$data['columns'][] = array('name' => 'time', 'type' => 'int(11)', 'NULL' => false, 'default' => '0');
-	$data['columns'][] = array('name' => 'protocol', 'type' => 'varchar(11)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'parent', 'type' => 'varchar(100)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'port', 'type' => 'varchar(100)', 'NULL' => false, 'default' => '');
-	$data['primary'] = 'hostname';
-	$data['keys'][] = array('name' => 'hostname', 'columns' => 'hostname');
-	$data['type'] = 'MyISAM';
-	$data['comment'] = 'Plugin DPDiscover - Table of discovered hosts';
-	api_plugin_db_table_create('dpdiscover', 'plugin_dpdiscover_hosts', $data);
 
 	$data = array();
 	$data['columns'][] = array('name' => 'id', 'type' => 'int(8)', 'NULL' => false, 'auto_increment' => true);
@@ -345,7 +308,7 @@ function dpdiscover_setup_table () {
 	$data['comment'] = 'Plugin DPDiscover - Templates of SysDesc matches to use to auto-add graphs to devices';
 	api_plugin_db_table_create('dpdiscover', 'plugin_dpdiscover_template', $data);
 }
-
+/*
 function dpdiscover_poller_bottom () {
 	global $config;
 
@@ -355,8 +318,9 @@ function dpdiscover_poller_bottom () {
 		return;
 
 	$t = read_config_option("dpdiscover_last_poll");
-
+*/
 	/* Check for the polling interval, only valid with the Multipoller patch */
+/*
 	$poller_interval = read_config_option("poller_interval");
 	if (!isset($poller_interval)) {
 		$poller_interval = 300;
@@ -380,5 +344,5 @@ function dpdiscover_poller_bottom () {
 		$sql = "update settings set value = '" . time() . "' where name = 'dpdiscover_last_poll'";
 	$result = mysql_query($sql) or die (mysql_error());
 }
-
+*/
 ?>
