@@ -81,8 +81,8 @@ function unifiedtrees_check_upgrade () {
 	$version = plugin_unifiedtrees_version ();
 	$current = $version['version'];
 	$old = read_config_option('plugin_unifiedtrees_version');
-/*
 	if ($current != $old) {
+/*
 		$dpdiscover_columns = array_rekey(db_fetch_assoc("SHOW COLUMNS FROM plugin_dpdiscover_hosts"), "Field", "Field");
 		if (!in_array("snmp_version", $dpdiscover_columns)) {
 			db_execute("ALTER TABLE plugin_dpdiscover_hosts ADD COLUMN snmp_version tinyint(1) unsigned NOT NULL DEFAULT '1' AFTER community");
@@ -281,7 +281,6 @@ function unifiedtrees_config_arrays () {
 	unset($menu["Utilities"]['logout.php']);
 	$menu["Utilities"]['plugins/unifiedtrees/tree_sources.php'] = "Unified Trees - Sources";
 	$menu["Utilities"]['logout.php'] = $temp;
-	}
 
 }
 /*
