@@ -36,8 +36,8 @@
 
 function plugin_unifiedtrees_install () {
 	api_plugin_register_hook('unifiedtrees', 'config_arrays', 'ut_config_arrays', 'setup.php');
-//	api_plugin_register_hook('dpdiscover', 'draw_navigation_text', 'dpdiscover_draw_navigation_text', 'setup.php');
-	api_plugin_register_hook('dpdiscover', 'config_settings', 'ut_config_settings', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'draw_navigation_text', 'ut_draw_navigation_text', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'config_settings', 'ut_config_settings', 'setup.php');
 //	api_plugin_register_hook('dpdiscover', 'poller_bottom', 'dpdiscover_poller_bottom', 'setup.php');
 
 	api_plugin_register_realm('unifiedtrees', 'tree_sources.php', 'Set Source Trees', 1);
@@ -136,7 +136,7 @@ function ut_utilities_list () {
 */
 function ut_config_settings () {
 	global $tabs, $settings;
-	$tabs["misc"] = "Visual";
+	$tabs["visual"] = "Visual";
 
 	if (isset($_SERVER['PHP_SELF']) && basename($_SERVER['PHP_SELF']) != 'settings.php')
 		return;
@@ -148,7 +148,7 @@ function ut_config_settings () {
 			),
 		'unifiedtrees_use_ut' => array(
 			'friendly_name' => "Use Unified Trees",
-			'description' => "Checking this means you've done everything you think you need to do to have Unified Trees fully installed; you are aware of the <a href='http://runningoffatthemouth.com/?p=1098#caveats>limitations and caveats</a> of the plugin (especially the authentication issues), and are ready to see what it looks like.",
+			'description' => "Checking this means you've done everything you think you need to do to have Unified Trees fully installed; you are aware of the <a href='http://runningoffatthemouth.com/?p=1098#caveats'>limitations and caveats</a> of the plugin (especially the authentication issues), and are ready to see what it looks like.",
 			'method' => 'checkbox',
 			),
 		'unifiedtrees_sort_trees' => array(
@@ -196,16 +196,15 @@ function ut_config_arrays () {
 	$menu["Utilities"]['logout.php'] = $temp;
 
 }
-/*
-function dpdiscover_draw_navigation_text ($nav) {
-	$nav["dpdiscover.php:"] = array("title" => "DPDiscover", "mapping" => "", "url" => "dpdiscover.php", "level" => "0");
-	$nav["dpdiscover_template.php:"] = array("title" => "DPDiscover Templates", "mapping" => "index.php:", "url" => "dpdiscover_template.php", "level" => "1");
-	$nav["dpdiscover_template.php:edit"] = array("title" => "Discover Templates", "mapping" => "index.php:", "url" => "dpdiscover_template.php", "level" => "1");
-	$nav["dpdiscover_template.php:actions"] = array("title" => "Discover Templates", "mapping" => "index.php:", "url" => "dpdiscover_template.php", "level" => "1");
-	$nav["utilities.php:dpdiscover_clear"] = array("title" => "Clear Discover Results", "mapping" => "index.php:,utilities.php:", "url" => "dpdiscover.php", "level" => "1");
+function ut_draw_navigation_text ($nav) {
+//	$nav["dpdiscover.php:"] = array("title" => "DPDiscover", "mapping" => "", "url" => "dpdiscover.php", "level" => "0");
+	$nav["tree_sources.php:"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
+	$nav["tree_sources.php:edit"] = array("title" => "UT - Sources - Edit", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
+	$nav["tree_sources.php:actions"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
+//	$nav["utilities.php:dpdiscover_clear"] = array("title" => "Clear Discover Results", "mapping" => "index.php:,utilities.php:", "url" => "dpdiscover.php", "level" => "1");
 	return $nav;
 }
-*/
+
 function ut_setup_table () {
 	global $config, $database_default;
 	include_once($config["library_path"] . "/database.php");
@@ -214,7 +213,7 @@ function ut_setup_table () {
 	$data['columns'][] = array('name' => 'id', 'type' => 'int(8)', 'NULL' => false, 'auto_increment' => true);
 	$data['columns'][] = array('name' => 'db_type', 'type' => 'varchar(20)', 'NULL' => false, 'default' => 'mysqli');
 	$data['columns'][] = array('name' => 'db_address', 'type' => 'varchar(50)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'database', 'type' => 'varchar(50)', 'NULL' => false, 'default' => 'cacti');
+	$data['columns'][] = array('name' => 'db_name', 'type' => 'varchar(50)', 'NULL' => false, 'default' => 'cacti');
 	$data['columns'][] = array('name' => 'db_uname', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'db_pword', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'db_port', 'type' => 'int(8)', 'NULL' => true);
