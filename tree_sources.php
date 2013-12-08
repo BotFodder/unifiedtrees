@@ -66,21 +66,18 @@ function form_save() {
 
 		$save["id"] = $_POST["id"];
 		$save["db_type"] = sql_sanitize($_POST["db_type"]);
-		if(!isset($_POST["db_address"] || $_POST["db_address"] == "") {
-			raise_message(2);
-			return;
-		}else{
-			$save["db_address"] = sql_sanitize($_POST["db_address"]);
-		}
+		$save["db_address"] = sql_sanitize($_POST["db_address"]);
 		$save["db_name"] = sql_sanitize($_POST["db_name"]);
 		$save["db_uname"] = sql_sanitize($_POST["db_uname"]);
 		$save["db_pword"] = sql_sanitize($_POST["db_pword"]);
-		$save["db_port"] = form_input_validate($_POST["db_port"], "db_port", "^[0-9]+$", true, 3);
+		$save["db_port"] = form_input_validate($_POST["db_port"], "db_port", "^[0-9]*$", true, 3);
 		$save["db_ssl"] = sql_sanitize($_POST["db_ssl"]);
-		$save["db_retries"] = form_input_validate($_POST["db_retries"], "db_retries", "^[0-9]+$", true, 3);
+		$save["db_retries"] = form_input_validate($_POST["db_retries"], "db_retries", "^[0-9]*$", true, 3);
 		$save["base_url"] = sql_sanitize($_POST["base_url"]);
+// NEED: Connectivity test
+		$save["enable_db"] = sql_sanitize($_POST["enable_db"]);
 
-		if (!is_error_message()) {
+		if (!is_error_message() && !empty($save["db_address"])) {
 			$unifiedtrees_source_id = sql_save($save, "plugin_unifiedtrees_sources");
 
 			if ($unifiedtrees_source_id) {
@@ -90,7 +87,7 @@ function form_save() {
 			}
 		}
 
-		if (is_error_message() || empty($_POST["id"])) {
+		if (is_error_message() || empty($_POST["id"]) || empty($_POST["db_address)) {
 			header("Location: tree_sources.php?id=" . (empty($unifiedtrees_source_id) ? $_POST["id"] : $unifiedtrees_source_id));
 		}else{
 			header("Location: tree_sources.php");
@@ -178,6 +175,12 @@ function tree_source_edit() {
 	global $colors;
 
 	$fields_ut_source_edit = array(
+		"enable_db" => array(
+			"method" => "checkbox",
+			"friendly_name" => "Enable Database",
+			"description" => "If necessary, a database connection can be disabled (rather than deleted).  This can speed up tree rendering if there are connectivity problems to other databases.  Databases can become automatically disabled if Unified Trees is configured to do so or if the connection fails a connectivity test when saving the connection.",
+			"value" => "|arg1:db_ssl|",
+		),
 		"db_address" => array(
 			"method" => "textbox",
 			"friendly_name" => "Database Address",
@@ -216,7 +219,7 @@ function tree_source_edit() {
 		"db_port" => array(
 			"method" => "textbox",
 			"friendly_name" => "DB Port",
-			"description" => "The port the remote database listens to.  If blank, the MySQL default (3306) will be used.",
+			"description" => "The port the remote database listens to.  If blank, the locally configured port will be used.  If not configured, the MySQL default (3306) will be used.",
 			"value" => "|arg1:db_port|",
 			"max_length" => "8",
 		),
@@ -229,7 +232,7 @@ function tree_source_edit() {
 		"db_retries" => array(
 			"method" => "textbox",
 			"friendly_name" => "Retries",
-			"description" => "Number of retries for the connection attempt.  If blank, 2 will be used.  If your database connections aren't stable, you might want to increase this, but at the expense of the tree taking longer to build/display.",
+			"description" => "Number of retries for the connection attempt.  If blank, 2 will be used (this differs from the Cacti default).  If your database connections aren't stable, you might want to increase this, but at the expense of the tree taking longer to build/display.  Also be aware that, if configured, Unified Trees will disable a connection that fails to connect after the number of retries has been exhausted.",
 			"value" => "|arg1:db_retries|",
 			"max_length" => "3",
 		),

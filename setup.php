@@ -211,13 +211,14 @@ function ut_setup_table () {
 
 	$data = array();
 	$data['columns'][] = array('name' => 'id', 'type' => 'int(8)', 'NULL' => false, 'auto_increment' => true);
+	$data['columns'][] = array('name' => 'enable_db', 'type' => 'varchar(3)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'db_type', 'type' => 'varchar(20)', 'NULL' => false, 'default' => 'mysqli');
 	$data['columns'][] = array('name' => 'db_address', 'type' => 'varchar(50)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'db_name', 'type' => 'varchar(50)', 'NULL' => false, 'default' => 'cacti');
 	$data['columns'][] = array('name' => 'db_uname', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'db_pword', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'db_port', 'type' => 'int(8)', 'NULL' => true);
-	$data['columns'][] = array('name' => 'db_ssl', 'type' => 'varchar(5)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'db_ssl', 'type' => 'varchar(3)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'db_retries', 'type' => 'int(2)', 'NULL' => false, 'default' => 2);
 	$data['columns'][] = array('name' => 'base_url', 'type' => 'varchar(100)', 'NULL' => false, 'default' => '');
 	$data['primary'] = 'id';
