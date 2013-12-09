@@ -162,6 +162,19 @@ function ut_config_settings () {
 			'method' => 'checkbox',
 			'default' => 'on',
 			),
+		'unifiedtrees_disable_bad_connection' => array(
+			'friendly_name' => "Disable Problem Servers",
+			'description' => "Given a valid email below, this will cause Unified Trees to disable tree source databases that it fails to successfully connect to.",
+			'method' => 'checkbox',
+			'default' => 'on',
+			),
+		'unifiedtrees_admin_email' => array(
+			'friendly_name' => "Admin Email",
+			'description' => "An email address to notify if a particular server connection is disabled because UT could not connect to it.",
+			'method' => "textbox",
+			'max_length' => 255,
+			"default" => "",
+			),
 	);
 	if (isset($settings["visual"]))
 		$settings["visual"] = array_merge($settings["visual"], $temp);

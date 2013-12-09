@@ -87,7 +87,7 @@ function form_save() {
 			}
 		}
 
-		if (is_error_message() || empty($_POST["id"]) || empty($_POST["db_address)) {
+		if (is_error_message() || empty($_POST["id"]) || empty($_POST["db_address"])) {
 			header("Location: tree_sources.php?id=" . (empty($unifiedtrees_source_id) ? $_POST["id"] : $unifiedtrees_source_id));
 		}else{
 			header("Location: tree_sources.php");
@@ -179,12 +179,12 @@ function tree_source_edit() {
 			"method" => "checkbox",
 			"friendly_name" => "Enable Database",
 			"description" => "If necessary, a database connection can be disabled (rather than deleted).  This can speed up tree rendering if there are connectivity problems to other databases.  Databases can become automatically disabled if Unified Trees is configured to do so or if the connection fails a connectivity test when saving the connection.",
-			"value" => "|arg1:db_ssl|",
+			"value" => "|arg1:enable_db|",
 		),
 		"db_address" => array(
 			"method" => "textbox",
 			"friendly_name" => "Database Address",
-			"description" => "IP (preferred) or FQDN hostname of the database server. REQUIRED",
+			"description" => "IP (preferred) or FQDN hostname of the database server. REQUIRED.  You do not need to specify the local database for this Cacti instance - it is always used.",
 			"value" => "|arg1:db_address|",
 			"max_length" => "50",
 		),
@@ -219,7 +219,7 @@ function tree_source_edit() {
 		"db_port" => array(
 			"method" => "textbox",
 			"friendly_name" => "DB Port",
-			"description" => "The port the remote database listens to.  If blank, the locally configured port will be used.  If not configured, the MySQL default (3306) will be used.",
+			"description" => "The port the remote database listens to.  If blank, the locally configured port will be used.  If not configured (or 0), the MySQL default (3306) will be used.",
 			"value" => "|arg1:db_port|",
 			"max_length" => "8",
 		),
@@ -232,7 +232,7 @@ function tree_source_edit() {
 		"db_retries" => array(
 			"method" => "textbox",
 			"friendly_name" => "Retries",
-			"description" => "Number of retries for the connection attempt.  If blank, 2 will be used (this differs from the Cacti default).  If your database connections aren't stable, you might want to increase this, but at the expense of the tree taking longer to build/display.  Also be aware that, if configured, Unified Trees will disable a connection that fails to connect after the number of retries has been exhausted.",
+			"description" => "Number of retries for the connection attempt.  If blank (or 0), 2 will be used (this differs from the Cacti default).  If your database connections aren't stable, you might want to increase this, but at the expense of the tree taking longer to build/display.  Also be aware that, if configured, Unified Trees will disable a connection that fails to connect after the number of retries has been exhausted.",
 			"value" => "|arg1:db_retries|",
 			"max_length" => "3",
 		),

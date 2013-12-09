@@ -127,7 +127,7 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['name'] = $tree['name'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tree_id'] = $tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['leaf_id'] = FALSE;
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = "tree_".$tree['id'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['url'] = $db['baseurl']."graph_view.php?action=tree&amp;tree_id=".$tree['id'];
+$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['url'] = $db['base_url']."graph_view.php?action=tree&amp;tree_id=".$tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
 			}
 			$currenttier = 0;
@@ -140,7 +140,7 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
 			if (is_array($treeitems)) {
 				foreach($treeitems as $treeitem) {
 					$tier = tree_tier($treeitem['order_key']);
-$url = $db['baseurl']."graph_view.php?action=tree&amp;tree_id=".$tree['id']."&amp;leaf_id=".$treeitem['id'];
+$url = $db['base_url']."graph_view.php?action=tree&amp;tree_id=".$tree['id']."&amp;leaf_id=".$treeitem['id'];
 if(isset($treeitem['title']) && $treeitem['title'] != "" && $treeitem['host_id'] == 0) {
 	$stn = $treeitem['title']."|".$tier;
 }elseif(isset($treeitem['description']) && $treeitem['host_id'] != 0) {
@@ -188,28 +188,61 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url;
 }
 
 function ut_setup_dbs() {
-	global $cnn_id,$config;
+	global $cnn_id,$config, $database_default, $database_username, $database_port, $database_password, $url_path;
 
 	$answer = array();
 	// Configure the local DB:
-	$answer[0]['baseurl'] = $config['url_path'];
+	$answer[0]['base_url'] = $url_path;
 	$answer[0]['dbconn'] = $cnn_id;
 
-	$remote = array();
-	$remote[] = array(
-		'host'    =>	'131.247.254.18',
-		'db'      =>	'cacti',
-		'dbuname' =>	'cactiuser',
-		'dbpword' =>	'C@ct!EDU16',
-		'baseurl' =>	'https://mhb-mon.net.usf.edu/',
-		'dbtype'  =>	'mysqli',
-	);
+	$remote = db_fetch_assoc("SELECT * FROM plugin_unifiedtrees_sources
+ WHERE enable_db='on'"); 
 	foreach ($remote as $other) {
 		$tmp = array();
-		$dsn = $other['dbtype']."://".rawurlencode($other['dbuname']).":".rawurlencode($other['dbpword'])."@".rawurlencode($other['host'])."/".rawurlencode($other['db'])."?persist";
+		if(!isset($other['db_name']) || $other['db_name'] == '') {
+			$other['db_name'] = $database_default;
+		}
+		if(!isset($other['db_uname']) || $other['db_uname'] == '') {
+			$other['db_uname'] = $database_username;
+		}
+		print "CHECK: $database_password\n";
+		if(!isset($other['db_pword']) || $other['db_pword'] == '') {
+			$other['db_pword'] = $database_password;
+		}
+		if(!isset($other['db_port']) || $other['db_port'] == 0 || $other['db_port'] == '') {
+			if(!isset($database_port) || $database_port == '') {
+				$other['db_port'] = "3306";
+			}else{
+				$other['db_port'] = $database_port;
+			}
+		}
+		if(!isset($other['db_retries']) || $other['db_retries'] == 0 ||
+		   $other['db_retries'] == '') {
+			$other['db_retries'] = 2;
+		}
+		if(!isset($other['base_url']) || $other['base_url'] == '') {
+			if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
+				$other['base_url'] = "https://";
+			}else{
+				$other['base_url'] = "http://";
+			}
+			$other['base_url'] .= $other['db_address'].$url_path;
+		}
+		$dsn = $other['db_type']."://".rawurlencode($other['db_uname']).":".rawurlencode($other['db_pword'])."@".rawurlencode($other['db_address'])."/".rawurlencode($other['db_name'])."?persist";
+		if($other['db_ssl'] == 'on') {
+			if($other['db_type'] == "mysql") {
+				$dsn .= "&clientflags=" . MYSQL_CLIENT_SSL;
+			}elseif ($other['db_type'] == "mysqli") {
+				$dsn .= "&clientflags=" . MYSQLI_CLIENT_SSL;
+			}
+		}
+		if($other['db_port'] != "3306") {
+			$dsn .= "&port=" . $port;
+		}
+
 		$oconn = ADONewConnection($dsn);
 		if($oconn) {
-			$tmp['baseurl'] = $other['baseurl'];
+			$tmp['base_url'] = $other['base_url'];
 			$tmp['dbconn'] = $oconn;
 			$answer[] = $tmp;
 		}else{
