@@ -96,8 +96,13 @@ $fulltree = ut_build_tree($dbs);
 
 print "foldersTree = gFld(\"\", \"\")
 foldersTree.xID = \"root\"\n";
+if(read_config_option("unifiedtrees_sort_trees") == 'on') {
+	ksort($fulltree['tree'], SORT_STRING);
+}
 foreach($fulltree['tree'] as $treename => $tree) {
-	ksort($tree['id'], SORT_STRING);
+	if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
+		ksort($tree['id'], SORT_STRING);
+	}
 	foreach($tree['id'] as $leafid => $leaf) {
 		print "ou".$leaf['tier']." = insFld(";
 		if($leaf['tier'] == 0) {
@@ -205,7 +210,6 @@ function ut_setup_dbs() {
 		if(!isset($other['db_uname']) || $other['db_uname'] == '') {
 			$other['db_uname'] = $database_username;
 		}
-		print "CHECK: $database_password\n";
 		if(!isset($other['db_pword']) || $other['db_pword'] == '') {
 			$other['db_pword'] = $database_password;
 		}
@@ -239,14 +243,30 @@ function ut_setup_dbs() {
 		if($other['db_port'] != "3306") {
 			$dsn .= "&port=" . $port;
 		}
-
-		$oconn = ADONewConnection($dsn);
-		if($oconn) {
-			$tmp['base_url'] = $other['base_url'];
-			$tmp['dbconn'] = $oconn;
-			$answer[] = $tmp;
-		}else{
-			print "FAILED: $dsn\n";
+		$attempt = 0;
+		while($attempt < $other['db_retries']) {
+			$oconn = ADONewConnection($dsn);
+			if($oconn) {
+				$tmp['base_url'] = $other['base_url'];
+				$tmp['dbconn'] = $oconn;
+				$answer[] = $tmp;
+				break;
+			}
+			$attempt++;
+		}
+		$disable_bad = read_config_option('unifiedtrees_disable_bad_connection');
+		$admin_email = read_config_option('unifiedtrees_admin_email');
+		if(!$oconn && $disable_bad == 'on' &&
+filter_var($admin_email, FILTER_VALIDATE_EMAIL)) {
+			db_execute("UPDATE plugin_unifiedtrees_sources SET enable_db=''
+ WHERE id=".$other['id']);
+			$message = "Disabled connection for unified trees:
+SERVER:  ".$other['db_address']."
+DB NAME: ".$other['db_name']."
+DB USER: ".$other['db_uname']."
+BASEURL: ".$other['base_url']."
+";
+			mail($admin_email, "UT DISABLED: ".$other['db_address'], $message);
 		}
 	}
 	return $answer;

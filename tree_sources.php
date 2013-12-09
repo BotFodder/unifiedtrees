@@ -21,6 +21,7 @@ chdir('../../');
 
 include("./include/auth.php");
 include_once("./lib/utility.php");
+include_once("./include/global.php");
 
 $host_actions = array(
 	1 => "Delete"
@@ -75,7 +76,11 @@ function form_save() {
 		$save["db_retries"] = form_input_validate($_POST["db_retries"], "db_retries", "^[0-9]*$", true, 3);
 		$save["base_url"] = sql_sanitize($_POST["base_url"]);
 // NEED: Connectivity test
-		$save["enable_db"] = sql_sanitize($_POST["enable_db"]);
+		if(ut_db_conntest($save) === FALSE) {
+			$save["enable_db"] = '';
+		}else{
+			$save["enable_db"] = sql_sanitize($_POST["enable_db"]);
+		}
 
 		if (!is_error_message() && !empty($save["db_address"])) {
 			$unifiedtrees_source_id = sql_save($save, "plugin_unifiedtrees_sources");
@@ -178,7 +183,7 @@ function tree_source_edit() {
 		"enable_db" => array(
 			"method" => "checkbox",
 			"friendly_name" => "Enable Database",
-			"description" => "If necessary, a database connection can be disabled (rather than deleted).  This can speed up tree rendering if there are connectivity problems to other databases.  Databases can become automatically disabled if Unified Trees is configured to do so or if the connection fails a connectivity test when saving the connection.",
+			"description" => "If necessary, a database connection can be disabled (rather than deleted).  This can speed up tree rendering if there are connectivity problems to db databases.  Databases can become automatically disabled if Unified Trees is configured to do so or if the connection fails a connectivity test when saving the connection.",
 			"value" => "|arg1:enable_db|",
 		),
 		"db_address" => array(
@@ -302,6 +307,7 @@ function tree_source() {
 	html_start_box("<strong>Unified Trees Sources</strong>", "100%", $colors["header"], "3", "center", "tree_sources.php?action=edit");
 
 	$display_text = array(
+		"enable_db" => array("Enabled?", "ASC"),
 		"db_address" => array("Database Address", "ASC"),
 		"db_name" => array("Database", "ASC"),
 		"db_uname" => array("Database User Name", "nosort"),
@@ -318,6 +324,12 @@ function tree_source() {
 	if (sizeof($dts)) {
 		foreach ($dts as $dt) {
 			form_alternate_row_color($colors["alternate"], $colors["light"], $i, "line" . $dt["id"]); $i++;
+			if($dt["enable_db"] == 'on') {
+				$dbenabled = "<font color=green>Yes</font>";
+			}else{
+				$dbenabled = "<font color=red>No</font>";
+			}
+			form_selectable_cell($dbenabled, $dt["id"]);
 			form_selectable_cell('<a class="linkEditMain" href="tree_sources.php?action=edit&id=' . $dt["id"] . '">' . $dt['db_address'] . '</a>', $dt["id"]);
 			form_selectable_cell($dt["db_name"], $dt["id"]);
 			form_selectable_cell($dt["db_uname"], $dt["id"]);
@@ -335,5 +347,50 @@ function tree_source() {
 	draw_actions_dropdown($host_actions);
 
 	print "</form>\n";
+}
+
+function ut_db_conntest($db) {
+	global $database_default, $database_username, $database_password, $database_port;
+	if(!isset($db['db_name']) || $db['db_name'] == '') {
+		$db['db_name'] = $database_default;
+	}
+	if(!isset($db['db_uname']) || $db['db_uname'] == '') {
+		$db['db_uname'] = $database_username;
+	}
+	print "CHECK: $database_password\n";
+	if(!isset($db['db_pword']) || $db['db_pword'] == '') {
+		$db['db_pword'] = $database_password;
+	}
+	if(!isset($db['db_port']) || $db['db_port'] == 0 || $db['db_port'] == '') {
+		if(!isset($database_port) || $database_port == '') {
+			$db['db_port'] = "3306";
+		}else{
+			$db['db_port'] = $database_port;
+		}
+	}
+	if(!isset($db['db_retries']) || $db['db_retries'] == 0 ||
+	   $db['db_retries'] == '') {
+		$db['db_retries'] = 2;
+	}
+	$dsn = $db['db_type']."://".rawurlencode($db['db_uname']).":".rawurlencode($db['db_pword'])."@".rawurlencode($db['db_address'])."/".rawurlencode($db['db_name'])."?persist";
+	if($db['db_ssl'] == 'on') {
+		if($db['db_type'] == "mysql") {
+			$dsn .= "&clientflags=" . MYSQL_CLIENT_SSL;
+		}elseif ($db['db_type'] == "mysqli") {
+			$dsn .= "&clientflags=" . MYSQLI_CLIENT_SSL;
+		}
+	}
+	if($db['db_port'] != "3306") {
+		$dsn .= "&port=" . $port;
+	}
+	$attempt = 0;
+	while($attempt < $db['db_retries']) {
+		$testconn = ADONewConnection($dsn);
+		if($testconn) {
+			return TRUE;
+		}
+		$attempt++;
+	}
+	return FALSE;
 }
 ?>
