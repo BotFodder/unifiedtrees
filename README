@@ -17,7 +17,11 @@ between Cacti instances.
 
 ----[ Features
 
-	Other than the main purpose, none.
+	Options include allowing unifiedtrees to disable database connections
+that fail to connect.  If a database is down for some reason, continually
+attempting to connect to it can cause slow response from a web browser as the
+code tries to build the unified tree.  Disabled connections must be manually
+reenabled.
 
 ----[ Installation
 
