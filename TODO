@@ -1,0 +1,20 @@
+This is where I theorize about what I may be doing with UT in the future.
+
+20131225 - Yes, thinking about stuff on Christmas.  I'm beginning to wonder if
+a large number of tree sources might result in slow render times for UT.  To
+avoid this, I'm thinking of setting up an optional "master/slave" setup, where:
+
+- The master pulls the trees from all the slaves on a regular basis - say, once
+  an hour, and stores the built tree in a DB table or set of tables.
+- The slaves manage their own tables as normal, but instead of every individual
+  Cacti install building the Unified Trees on their own, they would request the
+  tree the master built.
+- This would simplify setup greatly; only the master would need access to all
+  slaves; the slaves would only need to access the master's database.  Since
+  the slaves only pull the full tree from one source, render times should be
+  minimal.
+
+Downside?  Something added to a Cacti install since the last time the master
+built the tree will not show up on the table.
+
+Alternative?  Possibly some way for the slaves to submit changes to the master.
