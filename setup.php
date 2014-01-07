@@ -38,7 +38,7 @@ function plugin_unifiedtrees_install () {
 	api_plugin_register_hook('unifiedtrees', 'config_arrays', 'ut_config_arrays', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'draw_navigation_text', 'ut_draw_navigation_text', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'config_settings', 'ut_config_settings', 'setup.php');
-//	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
 
 	api_plugin_register_realm('unifiedtrees', 'tree_sources.php', 'Set Source Trees', 1);
 
@@ -104,7 +104,7 @@ function plugin_unifiedtrees_version () {
 
 function ut_utilities_action ($action) {
 	if ($action == 'ut_clear') {
-		mysql_query('DELETE FROM plugin_ut_tree');
+		db_execute('DELETE FROM plugin_unifiedtrees_tree');
 
 		include_once('./include/top_header.php');
 		utilities();
@@ -200,20 +200,6 @@ function ut_config_settings () {
 	else
 		$settings["visual"]=$temp;
 }
-/*
-function dpdiscover_show_tab () {
-	global $config, $dpdiscover_tab;
-	include_once($config["library_path"] . "/database.php");
-	include_once($config["base_path"] . "/plugins/dpdiscover/config.php");
-	if (api_user_realm_auth('dpdiscover.php')) {
-		if (!substr_count($_SERVER["REQUEST_URI"], "dpdiscover.php")) {
-			print '<a href="' . $config['url_path'] . 'plugins/dpdiscover/dpdiscover.php"><img src="' . $config['url_path'] . 'plugins/dpdiscover/images/tab_discover.gif" alt="dpdiscover" align="absmiddle" border="0"></a>';
-		}else{
-			print '<a href="' . $config['url_path'] . 'plugins/dpdiscover/dpdiscover.php"><img src="' . $config['url_path'] . 'plugins/dpdiscover/images/tab_discover_down.gif" alt="dpdiscover" align="absmiddle" border="0"></a>';
-		}
-	}
-}
-*/
 
 function ut_config_arrays () {
 	global $menu, $config, $ut_tree_build_freq;
@@ -276,6 +262,38 @@ function ut_setup_table () {
 	$data['type'] = 'MyISAM';
 	$data['comment'] = 'Plugin Unified Trees - Database connections to use as sources of other trees.';
 	api_plugin_db_table_create('unifiedtrees', 'plugin_unifiedtrees_sources', $data);
+}
+
+function ut_poller_bottom() {
+	global $config;
+
+	include_once($config["library_path"] . "/database.php");
+	$frequency = read_config_option("unifiedtrees_build_freq");
+	if(!is_numeric($frequency)) {
+		return;
+	}
+
+	$last_build = read_config_option("unifiedtrees_last_build");
+	if($last_build != '' && time() - $last_build < $frequency) {
+		return;
+	}
+	$command_string = trim(read_config_option("path_php_binary"));
+
+	// Okay, let's fudge it.
+	if(trim($command_string) == '')
+		$command_string = "php";
+
+	cacti_log("UnifiedTrees building tree.\n");
+
+	$extra_args = ' -q ' . $config['base_path'] . '/plugins/unifiedtrees/build_tree.php';
+
+	exec_background($command_string, $extra_args);
+
+	if($last_build == '') {
+		$sql = "INSERT INTO settings VALUES ('unifiedtrees_last_build','".time()."')";
+	}else{
+		$sql = "UPDATE settings SET value = '".time()."' WHERE name='unifiedtrees_last_build'";
+	db_execute($sql);
 }
 
 ?>
