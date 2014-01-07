@@ -91,33 +91,41 @@ foreach($parms as $parameter) {
 	}
 }
 
-$dbs = ut_setup_dbs();
-$fulltree = ut_build_tree($dbs);
+$ut_mode = read_config_option("unifiedtrees_build_freq");
+if ($ut_mode == "always") {
+	ut_build_always();
+}
 
-print "foldersTree = gFld(\"\", \"\")
+function ut_build_always() {
+	$dbs = ut_setup_dbs();
+	$fulltree = ut_build_tree($dbs);
+
+	print "foldersTree = gFld(\"\", \"\")
 foldersTree.xID = \"root\"\n";
-if(read_config_option("unifiedtrees_sort_trees") == 'on') {
-	ksort($fulltree['tree'], SORT_STRING);
-}
-foreach($fulltree['tree'] as $treename => $tree) {
-	if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
-		ksort($tree['id'], SORT_STRING);
+	if(read_config_option("unifiedtrees_sort_trees") == 'on') {
+		ksort($fulltree['tree'], SORT_STRING);
 	}
-	foreach($tree['id'] as $leafid => $leaf) {
-		print "ou".$leaf['tier']." = insFld(";
-		if($leaf['tier'] == 0) {
-			print "foldersTree";
-		}else{
-			print "ou".($leaf['tier']-1);
+	foreach($fulltree['tree'] as $treename => $tree) {
+		if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
+			ksort($tree['id'], SORT_STRING);
 		}
-		print ", gFld(\"";
-		if($leaf['host_id'] > 0) {
-			print "Host: ";
-		}
-		print $leaf['name']."\", \"".$leaf['url']."\"))
+		foreach($tree['id'] as $leafid => $leaf) {
+			print "ou".$leaf['tier']." = insFld(";
+			if($leaf['tier'] == 0) {
+				print "foldersTree";
+			}else{
+				print "ou".($leaf['tier']-1);
+			}
+			print ", gFld(\"";
+			if($leaf['host_id'] > 0) {
+				print "Host: ";
+			}
+			print $leaf['name']."\", \"".$leaf['url']."\"))
 ou".$leaf['tier'].".xID = \"".$leaf['xID']."\"\n";
+		}
 	}
 }
+
 function ut_build_tree($databases) {
 
 	foreach($databases as $db) {
@@ -197,7 +205,12 @@ function ut_setup_dbs() {
 
 	$answer = array();
 	// Configure the local DB:
-	$answer[0]['base_url'] = $url_path;
+	$ut_base_url = read_config_option("unifiedtrees_base_url");
+	if(isset($ut_base_url) && $ut_base_url != "") {
+		$answer[0]['base_url'] = $ut_base_url;
+	}else{
+		$answer[0]['base_url'] = $url_path;
+	}
 	$answer[0]['dbconn'] = $cnn_id;
 
 	$remote = db_fetch_assoc("SELECT * FROM plugin_unifiedtrees_sources

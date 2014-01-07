@@ -38,7 +38,7 @@ function plugin_unifiedtrees_install () {
 	api_plugin_register_hook('unifiedtrees', 'config_arrays', 'ut_config_arrays', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'draw_navigation_text', 'ut_draw_navigation_text', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'config_settings', 'ut_config_settings', 'setup.php');
-//	api_plugin_register_hook('dpdiscover', 'poller_bottom', 'dpdiscover_poller_bottom', 'setup.php');
+//	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
 
 	api_plugin_register_realm('unifiedtrees', 'tree_sources.php', 'Set Source Trees', 1);
 
@@ -80,12 +80,6 @@ function unifiedtrees_check_upgrade () {
 	$current = $version['version'];
 	$old = read_config_option('plugin_unifiedtrees_version');
 	if ($current != $old) {
-/*
-		$dpdiscover_columns = array_rekey(db_fetch_assoc("SHOW COLUMNS FROM plugin_dpdiscover_hosts"), "Field", "Field");
-		if (!in_array("snmp_version", $dpdiscover_columns)) {
-			db_execute("ALTER TABLE plugin_dpdiscover_hosts ADD COLUMN snmp_version tinyint(1) unsigned NOT NULL DEFAULT '1' AFTER community");
-		}
-*/
 		// Set the new version
 		db_execute("UPDATE plugin_config SET " .
 				"version='" . $version["version"] . "', " .
@@ -107,10 +101,10 @@ function plugin_unifiedtrees_version () {
 			'url'      => 'http://runningoffatthemouth.com/?p=1089'
 		);
 }
-/*
-function dpdiscover_utilities_action ($action) {
-	if ($action == 'dpdiscover_clear') {
-		mysql_query('DELETE FROM plugin_dpdiscover_hosts');
+
+function ut_utilities_action ($action) {
+	if ($action == 'ut_clear') {
+		mysql_query('DELETE FROM plugin_ut_tree');
 
 		include_once('./include/top_header.php');
 		utilities();
@@ -118,6 +112,7 @@ function dpdiscover_utilities_action ($action) {
 	}
 	return $action;
 }
+
 function ut_utilities_list () {
 	global $colors;
 
@@ -125,22 +120,32 @@ function ut_utilities_list () {
 	?>
 	<tr bgcolor="#<?php print $colors["form_alternate1"];?>">
 		<td class="textArea">
-			<a href='utilities.php?action=dpdiscover_clear'>Clear DPDiscover Results</a>
+			<a href='utilities.php?action=ut_clear'>Clear Unified_Tree</a>
 		</td>
 		<td class="textArea">
-			This will clear the results from the discovery polling.
+			This will delete the created Unified Tree on this master, which should trigger a rebuilding of the tree.
 		</td>
 	</tr>
 	<?php
 }
-*/
+
 function ut_config_settings () {
-	global $tabs, $settings;
+	global $tabs, $settings, $ut_tree_build_freq,$url_path;
 	$tabs["visual"] = "Visual";
 
 	if (isset($_SERVER['PHP_SELF']) && basename($_SERVER['PHP_SELF']) != 'settings.php')
 		return;
 
+	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
+		$ut_base_url = "https://";
+	}else{
+		$ut_base_url = "http://";
+	}
+	if (isset($_SERVER['HTTP_HOST'])) {
+		$ut_base_url .= $_SERVER['HTTP_HOST'].$url_path;
+	}else{
+		$ut_base_url .= "fixme!".$url_path;
+	}
 	$temp = array(
 		"unifiedtrees_header" => array(
 			"friendly_name" => "Unified Trees",
@@ -150,6 +155,20 @@ function ut_config_settings () {
 			'friendly_name' => "Use Unified Trees",
 			'description' => "Checking this means you've done everything you think you need to do to have Unified Trees fully installed; you are aware of the <a href='http://runningoffatthemouth.com/?p=1098#caveats'>limitations and caveats</a> of the plugin (especially the authentication issues), and are ready to see what it looks like.",
 			'method' => 'checkbox',
+			),
+		'unifiedtrees_build_freq' => array(
+			'friendly_name' => "Build Frequency",
+			'description' => "This controls how UT operates.  'Always' preserves the original '0.1' operation: all listed 'enabled' databases are swept for tree information and a tree is built and displayed - every time the graph tree is loaded (for large installs, this can take a noticable amount of time). 'Client' - the first database server to respond in the list of 'enabled' databases (as long as there is one, otherwise the local tree is used) is queried for a prebuilt tree, and that is displayed.  All other values: this Cacti instance becomes a 'Server', and builds a tree at the indicated frequency.  The tree is stored in a memory based table and can be used by other Cacti installs that are set as 'Client's.",
+			'method' => 'drop_array',
+			'default' => 'always',
+			"array" => $ut_tree_build_freq,
+			),
+		'unifiedtrees_base_url' => array(
+			'friendly_name' => "Base URL for UT",
+			'description' => "If this UT/Cacti instance is in 'Server' mode, during the tree build process the server may not be able to figure out a decent 'base url' - the address of Cacti.  You should be able to just accept the default listed here and 'Save' it.",
+			'method' => "textbox",
+			'max_length' => 255,
+			'default' => $ut_base_url,
 			),
 		'unifiedtrees_sort_trees' => array(
 			'friendly_name' => "Sort Trees",
@@ -197,24 +216,42 @@ function dpdiscover_show_tab () {
 */
 
 function ut_config_arrays () {
-	global $menu, $config;
-
-//	include_once($config["base_path"] . "/plugins/unifiedtrees/config.php");
-
-//	$menu["Templates"]['plugins/dpdiscover/dpdiscover_template.php'] = "DPDiscover Templates";
+	global $menu, $config, $ut_tree_build_freq;
 
 	$temp = $menu["Utilities"]['logout.php'];
 	unset($menu["Utilities"]['logout.php']);
 	$menu["Utilities"]['plugins/unifiedtrees/tree_sources.php'] = "Unified Trees - Sources";
 	$menu["Utilities"]['logout.php'] = $temp;
 
+/* Welcome to the new world.  This is an array that defines what mode UT can
+   be set to:
+	"Always" - operate in the 0.1 fashion.
+	"Client" - grab the first entry in the list of DBs, pull the built tree,
+		if available, and use it.
+	Integer - Build the tree every however many seconds.  There will be a
+		ut_last_build value in the settings to indicate the last time
+		the tree was built.  If it was more than Integer minutes ago,
+		then we build the tree again.
+*/
+	$ut_tree_build_freq = array(
+		"always" => "Always",
+		"client" => "Client",
+		"60" => "Every 1 Hour",
+		"120" => "Every 2 Hours",
+		"240" => "Every 4 Hours",
+		"360" => "Every 6 Hours",
+		"480" => "Every 8 Hours",
+		"720" => "Every 12 Hours",
+		"1440" => "Every Day"
+	);
 }
+
 function ut_draw_navigation_text ($nav) {
 //	$nav["dpdiscover.php:"] = array("title" => "DPDiscover", "mapping" => "", "url" => "dpdiscover.php", "level" => "0");
 	$nav["tree_sources.php:"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
 	$nav["tree_sources.php:edit"] = array("title" => "UT - Sources - Edit", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
 	$nav["tree_sources.php:actions"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
-//	$nav["utilities.php:dpdiscover_clear"] = array("title" => "Clear Discover Results", "mapping" => "index.php:,utilities.php:", "url" => "dpdiscover.php", "level" => "1");
+//	$nav["utilities.php:ut_clear"] = array("title" => "Clear Unified Tree", "mapping" => "index.php:,utilities.php:", "url" => "tree_sources.php", "level" => "1");
 	return $nav;
 }
 
