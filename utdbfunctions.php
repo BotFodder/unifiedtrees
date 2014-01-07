@@ -51,45 +51,43 @@ include_once($config["base_path"] . '/lib/template.php');
 include_once($config["base_path"] . '/lib/api_tree.php');
 include_once($config["base_path"] . '/lib/tree.php');
 include_once($config["base_path"] . '/lib/html_tree.php');
+include_once($config["library_path"] . "/database.php");
 
-/* process calling arguments */
-$parms = $_SERVER["argv"];
-array_shift($parms);
+function ut_setup_tree_table() {
+	$data = array();
+	$data['columns'][] = array('name' => 'id', 'type' => 'int(8)', 'NULL' => false, 'auto_increment' => true);
+	$data['columns'][] = array('name' => 'tier', 'type' => 'int(4)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'treename', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'name', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'fullname', 'type' => 'varchar(255)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'tree_id', 'type' => 'int(4)', 'NULL' => false, 'default' => 0);
+	$data['columms'][] = array('name' => 'leaf_id', 'type' => 'int(4)', 'NULL' => true);
+	$data['columns'][] = array('name' => 'xID', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'url', 'type' => 'varchar(150)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'host_id', 'type' => 'int(8)', 'NULL' => false, 'default' => 0);
+	$data['primary'] = 'id';
+	$data['keys'][] = array();
+	$data['type'] = 'memory';
+	$data['comment'] = 'Plugin Unified Trees - Holds the built tree.';
+	api_plugin_db_table_create('unifiedtrees', 'plugin_unifiedtrees_tree', $data);
+}
 
-$debug = FALSE;
-$forcerun = FALSE;
-
-foreach($parms as $parameter) {
-	@list($arg, $value) = @explode('=', $parameter);
-
-	switch ($arg) {
-/*
-	case "-r":
-		dpdiscover_recreate_tables();
-		break;
-*/
-	case "-d":
-		$debug = TRUE;
-		break;
-	case "-h":
-		display_help();
-		exit;
-	case "-f":
-		$forcerun = TRUE;
-		break;
-	case "-v":
-		display_help();
-		exit;
-	case "--version":
-		display_help();
-		exit;
-	case "--help":
-		display_help();
-		exit;
-	default:
-		print "ERROR: Invalid Parameter " . $parameter . "\n\n";
-		display_help();
-		exit;
+function ut_save_tree($fulltree) {
+	foreach($fulltree['tree'] as $treename => $tree) {
+		foreach($tree['id'] as $leafid => $leaf) {
+			$tier = $leaf['tier'];
+			$name = $leaf['name'];
+			$fullname = $leaf['fullname'];
+			$tree_id = $leaf['tree_id'];
+			if(!isset($leaf['leaf_id'])) {
+				$leaf_id = "NULL";
+			}else{
+				$leaf_id = "'".$leaf['leaf_id']."'";
+			}
+			$xID = $leaf['xID'];
+			$url = $leaf['url'];
+			$host_id = $leaf['host_id'];
+		}
 	}
 }
 
@@ -156,8 +154,6 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url;
 }
 //					print "TREE: ".$tree['name']." FULL: ".$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['fullname']."
 //".$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']."\n";
-					if($fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['host_id'] > 0) {
-					}
 				}
 			}else{
 				print "Not an array $treeitems\n";
@@ -250,5 +246,71 @@ BASEURL: ".$other['base_url']."
 		}
 	}
 	return $answer;
+}
+
+function ut_get_server_db() {
+	global $config, $database_default, $database_username, $database_port, $database_password;
+
+	$remote = db_fetch_assoc("SELECT * FROM plugin_unifiedtrees_sources
+ WHERE enable_db='on'"); 
+	foreach ($remote as $other) {
+		$tmp = array();
+		if(!isset($other['db_name']) || $other['db_name'] == '') {
+			$other['db_name'] = $database_default;
+		}
+		if(!isset($other['db_uname']) || $other['db_uname'] == '') {
+			$other['db_uname'] = $database_username;
+		}
+		if(!isset($other['db_pword']) || $other['db_pword'] == '') {
+			$other['db_pword'] = $database_password;
+		}
+		if(!isset($other['db_port']) || $other['db_port'] == 0 || $other['db_port'] == '') {
+			if(!isset($database_port) || $database_port == '') {
+				$other['db_port'] = "3306";
+			}else{
+				$other['db_port'] = $database_port;
+			}
+		}
+		if(!isset($other['db_retries']) || $other['db_retries'] == 0 ||
+		   $other['db_retries'] == '') {
+			$other['db_retries'] = 2;
+		}
+		$dsn = $other['db_type']."://".rawurlencode($other['db_uname']).":".rawurlencode($other['db_pword'])."@".rawurlencode($other['db_address'])."/".rawurlencode($other['db_name'])."?persist";
+		if($other['db_ssl'] == 'on') {
+			if($other['db_type'] == "mysql") {
+				$dsn .= "&clientflags=" . MYSQL_CLIENT_SSL;
+			}elseif ($other['db_type'] == "mysqli") {
+				$dsn .= "&clientflags=" . MYSQLI_CLIENT_SSL;
+			}
+		}
+		if($other['db_port'] != "3306") {
+			$dsn .= "&port=" . $port;
+		}
+		$attempt = 0;
+		while($attempt < $other['db_retries']) {
+			$oconn = ADONewConnection($dsn);
+			// Just retrun the first one that's live.
+			if($oconn) {
+				return($oconn);
+				break;
+			}
+			$attempt++;
+		}
+		$disable_bad = read_config_option('unifiedtrees_disable_bad_connection');
+		$admin_email = read_config_option('unifiedtrees_admin_email');
+		if(!$oconn && $disable_bad == 'on' &&
+filter_var($admin_email, FILTER_VALIDATE_EMAIL)) {
+			db_execute("UPDATE plugin_unifiedtrees_sources SET enable_db=''
+ WHERE id=".$other['id']);
+			$message = "Disabled connection for unified trees:
+SERVER:  ".$other['db_address']."
+DB NAME: ".$other['db_name']."
+DB USER: ".$other['db_uname']."
+BASEURL: ".$other['base_url']."
+";
+			mail($admin_email, "UT DISABLED: ".$other['db_address'], $message);
+		}
+	}
+	return FALSE;
 }
 ?>

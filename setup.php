@@ -71,7 +71,7 @@ function unifiedtrees_check_upgrade () {
 	include_once($config["library_path"] . "/functions.php");
 
 	// Let's only run this check if we are on a page that actually needs the data
-	$files = array('plugins.php', 'tree_sources.php');
+	$files = array('plugins.php', 'tree_sources.php', 'settings.php');
 	if (isset($_SERVER['PHP_SELF']) && !in_array(basename($_SERVER['PHP_SELF']), $files)) {
 		return;
 	}
@@ -88,12 +88,15 @@ function unifiedtrees_check_upgrade () {
 				"webpage='" . $version["url"] . "' " .
 				"WHERE directory='" . $version["name"] . "' ");
 	}
+	// This is new, and if we've been upgraded from 0.1, may not exist.
+	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
+	db_execute("REPLACE INTO settings (name, value) VALUES ('plugin_unifiedtrees_version', '".$version['version']."')");
 }
 
 function plugin_unifiedtrees_version () {
 	return array(
 		'name'     => 'unifiedtrees',
-			'version'  => '0.1',
+			'version'  => '0.2',
 			'longname' => 'Unified Trees',
 			'author'   => 'Eric Stewart',
 			'homepage' => 'http://runningoffatthemouth.com/?p=1089',
@@ -136,6 +139,7 @@ function ut_config_settings () {
 	if (isset($_SERVER['PHP_SELF']) && basename($_SERVER['PHP_SELF']) != 'settings.php')
 		return;
 
+	unifiedtrees_check_upgrade();
 	if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
 		$ut_base_url = "https://";
 	}else{
@@ -293,6 +297,7 @@ function ut_poller_bottom() {
 		$sql = "INSERT INTO settings VALUES ('unifiedtrees_last_build','".time()."')";
 	}else{
 		$sql = "UPDATE settings SET value = '".time()."' WHERE name='unifiedtrees_last_build'";
+	}
 	db_execute($sql);
 }
 

@@ -2,14 +2,14 @@
 /*---------------------------------------------------------------------------+
  | Copyright (C) 2013 Eric Stewart                                           |
  |                                                                           |
- | This program is free software; you can redistribute it and/or	     |
+ | This program is free software; you can redistribute it and/or             |
  | modify it under the terms of the GNU General Public License               |
  | as published by the Free Software Foundation; either version 2            |
  | of the License, or (at your option) any later version.                    |
  |                                                                           |
  | This program is distributed in the hope that it will be useful,           |
  | but WITHOUT ANY WARRANTY; without even the implied warranty of            |
- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the	     |
+ | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             |
  | GNU General Public License for more details.                              |
  +---------------------------------------------------------------------------+
  | Unified Trees: Cacti Plugin to unify trees from multiple Cacti servers    |
@@ -19,11 +19,10 @@
 */
 
 /* do NOT run this script through a web browser */
-/*
-if (!isset($_SERVER["argv"][0]) || isset($_SERVER['REQUEST_METHOD'])  || isset($_SERVER['REMOTE_ADDR'])) {
+if(!isset($_SERVER["argv"][0]) || isset($_SERVER['REQUEST_METHOD'])  || isset($_SERVER['REMOTE_ADDR'])) {
 	die("<br><strong>This script is only meant to run at the command line.</strong>");
 }
-*/
+
 /* let PHP run just as long as it has to */
 ini_set("max_execution_time", "0");
 
@@ -35,7 +34,7 @@ if (strpos($dir, 'plugins') !== false) {
 	chdir('../../');
 }
 
-include_once("./include/global.php");
+include("./include/global.php");
 include_once($config["base_path"] . '/lib/ping.php');
 include_once($config["base_path"] . '/lib/utility.php');
 include_once($config["base_path"] . '/lib/api_data_source.php');
@@ -47,11 +46,15 @@ include_once($config["base_path"] . '/lib/api_device.php');
 include_once($config["base_path"] . '/lib/sort.php');
 include_once($config["base_path"] . '/lib/html_form_template.php');
 include_once($config["base_path"] . '/lib/template.php');
-
-include_once($config["base_path"] . '/lib/api_tree.php');
-include_once($config["base_path"] . '/lib/tree.php');
-include_once($config["base_path"] . '/lib/html_tree.php');
 include_once($config["base_path"] . '/plugins/unifiedtrees/utdbfunctions.php');
+
+// Should be checked elsewhere, but check here too!
+$ut_enabled = read_config_option("unifiedtrees_use_ut");
+$ut_server = read_config_option("unifiedtrees_build_freq");
+
+if($ut_enabled != "on" || !is_numeric($ut_server)) {
+	die("Either UT is not 'on', or this instance is not a server: ".$ut_server."\n");
+}
 
 /* process calling arguments */
 $parms = $_SERVER["argv"];
@@ -61,14 +64,6 @@ $debug = FALSE;
 $forcerun = FALSE;
 
 foreach($parms as $parameter) {
-	@list($arg, $value) = @explode('=', $parameter);
-
-	switch ($arg) {
-/*
-	case "-r":
-		dpdiscover_recreate_tables();
-		break;
-*/
 	case "-d":
 		$debug = TRUE;
 		break;
@@ -94,41 +89,23 @@ foreach($parms as $parameter) {
 	}
 }
 
-$ut_mode = read_config_option("unifiedtrees_build_freq");
-if ($ut_mode == "always") {
-	ut_build_always();
-}
+// We're just gonna do this every time.
+db_execute("DROP TABLE plugin_unifiedtrees_tree");
 
-function ut_build_always() {
-	$dbs = ut_setup_dbs();
-	$fulltree = ut_build_tree($dbs);
-	ut_print_tree($fulltree);
-}
+ut_setup_tree_table();
 
-function ut_print_tree($fulltree) {
-	print "foldersTree = gFld(\"\", \"\")
-foldersTree.xID = \"root\"\n";
-	if(read_config_option("unifiedtrees_sort_trees") == 'on') {
-		ksort($fulltree['tree'], SORT_STRING);
-	}
-	foreach($fulltree['tree'] as $treename => $tree) {
-		if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
-			ksort($tree['id'], SORT_STRING);
-		}
-		foreach($tree['id'] as $leafid => $leaf) {
-			print "ou".$leaf['tier']." = insFld(";
-			if($leaf['tier'] == 0) {
-				print "foldersTree";
-			}else{
-				print "ou".($leaf['tier']-1);
-			}
-			print ", gFld(\"";
-			if($leaf['host_id'] > 0) {
-				print "Host: ";
-			}
-			print $leaf['name']."\", \"".$leaf['url']."\"))
-ou".$leaf['tier'].".xID = \"".$leaf['xID']."\"\n";
-		}
-	}
+$dbs = ut_setup_dbs();
+
+$fulltree = ut_build_tree();
+
+ut_save_tree($fulltree);
+
+function display_help () {
+	print "BuildTrees for UT v0.2, Copyright 2014 - Eric Stewart\n\n";
+	print "usage: findhosts.php [-d] [-h] [--help] [-v] [--version]\n\n";
+	print "-f	   - Force the execution of a discovery process\n";
+	print "-d	   - Display verbose output during execution\n";
+	print "-v --version  - Display this help message\n";
+	print "-h --help     - display this help message\n";
 }
 ?>
