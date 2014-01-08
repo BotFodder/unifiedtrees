@@ -56,12 +56,12 @@ include_once($config["library_path"] . "/database.php");
 function ut_setup_tree_table() {
 	$data = array();
 	$data['columns'][] = array('name' => 'id', 'type' => 'int(8)', 'NULL' => false, 'auto_increment' => true);
-	$data['columns'][] = array('name' => 'tier', 'type' => 'int(4)', 'NULL' => false, 'default' => '');
+	$data['columns'][] = array('name' => 'tier', 'type' => 'int(4)', 'NULL' => false, 'default' => 0);
 	$data['columns'][] = array('name' => 'treename', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'name', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'fullname', 'type' => 'varchar(255)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'tree_id', 'type' => 'int(4)', 'NULL' => false, 'default' => 0);
-	$data['columms'][] = array('name' => 'leaf_id', 'type' => 'int(4)', 'NULL' => true);
+// 	$data['columns'][] = array('name' => 'tree_id', 'type' => 'int(4)', 'NULL' => false, 'default' => 0);
+// 	$data['columms'][] = array('name' => 'leaf_id', 'type' => 'int(4)', 'NULL' => true);
 	$data['columns'][] = array('name' => 'xID', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'url', 'type' => 'varchar(150)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'host_id', 'type' => 'int(8)', 'NULL' => false, 'default' => 0);
@@ -78,17 +78,36 @@ function ut_save_tree($fulltree) {
 			$tier = $leaf['tier'];
 			$name = $leaf['name'];
 			$fullname = $leaf['fullname'];
-			$tree_id = $leaf['tree_id'];
-			if(!isset($leaf['leaf_id'])) {
-				$leaf_id = "NULL";
-			}else{
-				$leaf_id = "'".$leaf['leaf_id']."'";
-			}
+// 			$tree_id = $leaf['tree_id'];
+// 			if(!isset($leaf['leaf_id']) || $leaf['leaf_id'] === FALSE) {
+// 				$leaf_id = "NULL";
+// 			}else{
+// 				$leaf_id = $leaf['leaf_id'];
+// 			}
 			$xID = $leaf['xID'];
 			$url = $leaf['url'];
 			$host_id = $leaf['host_id'];
+			db_execute("INSERT INTO plugin_unifiedtrees_tree (tier, treename, name, fullname, xID, url, host_id) VALUES ($tier, '$treename', '$name', '$fullname', '$xID', '$url', $host_id)");
 		}
 	}
+}
+
+function ut_read_tree($database = FALSE) {
+	global $cnn_id;
+	if (!$database) {
+		$database = $cnn_id;
+	}
+	$fulltree = array();
+	$leaves = db_fetch_assoc("SELECT * from plugin_unifiedtrees_tree ORDER BY id", TRUE, $database);
+	foreach ($leaves as $leaf) {
+$fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['fullname'] = $leaf['fullname'];
+$fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['tier'] = $leaf['tier'];
+$fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['name'] = $leaf['name'];
+$fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['xID'] = $leaf['xID'];
+$fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['url'] = $leaf['url'];
+$fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['host_id'] = $leaf['host_id'];
+	}
+	return $fulltree;
 }
 
 function ut_build_tree($databases) {
@@ -100,10 +119,10 @@ function ut_build_tree($databases) {
 			$tiername[0] = "0";
 			if(!isset($fulltree['tree'][$tree['name']]['id'][$tiername[0]])) {
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tier'] = 0;
-$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['fullname'] = $tree['name'];
+$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['fullname'] = $tiername[0];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['name'] = $tree['name'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tree_id'] = $tree['id'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['leaf_id'] = FALSE;
+// $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tree_id'] = $tree['id'];
+// $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['leaf_id'] = FALSE;
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = "tree_".$tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['url'] = $db['base_url']."graph_view.php?action=tree&amp;tree_id=".$tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
@@ -164,7 +183,7 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url;
 }
 
 function ut_setup_dbs() {
-	global $cnn_id,$config, $database_default, $database_username, $database_port, $database_password, $url_path;
+	global $cnn_id, $config, $database_default, $database_username, $database_port, $database_password, $url_path;
 
 	$answer = array();
 	// Configure the local DB:
@@ -254,6 +273,7 @@ function ut_get_server_db() {
 	$remote = db_fetch_assoc("SELECT * FROM plugin_unifiedtrees_sources
  WHERE enable_db='on'"); 
 	foreach ($remote as $other) {
+		unset($why);
 		$tmp = array();
 		if(!isset($other['db_name']) || $other['db_name'] == '') {
 			$other['db_name'] = $database_default;
@@ -291,23 +311,31 @@ function ut_get_server_db() {
 			$oconn = ADONewConnection($dsn);
 			// Just retrun the first one that's live.
 			if($oconn) {
-				return($oconn);
-				break;
+				$tables = db_fetch_assoc("SHOW TABLES LIKE 'plugin_unifiedtrees_tree'", TRUE, $oconn);
+				if(sizeof($tables > 0)) {
+					return($oconn);
+					break;
+				}else{
+					$why = "Could not find table plugin_unifiedtrees_tree\n";
+				}
 			}
 			$attempt++;
 		}
 		$disable_bad = read_config_option('unifiedtrees_disable_bad_connection');
 		$admin_email = read_config_option('unifiedtrees_admin_email');
-		if(!$oconn && $disable_bad == 'on' &&
+		if($disable_bad == 'on' &&
 filter_var($admin_email, FILTER_VALIDATE_EMAIL)) {
 			db_execute("UPDATE plugin_unifiedtrees_sources SET enable_db=''
  WHERE id=".$other['id']);
+			if(!isset($why)) {
+				$why = "Could not connect to database\n";
+			}
 			$message = "Disabled connection for unified trees:
 SERVER:  ".$other['db_address']."
 DB NAME: ".$other['db_name']."
 DB USER: ".$other['db_uname']."
 BASEURL: ".$other['base_url']."
-";
+$why";
 			mail($admin_email, "UT DISABLED: ".$other['db_address'], $message);
 		}
 	}

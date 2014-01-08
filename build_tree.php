@@ -19,9 +19,9 @@
 */
 
 /* do NOT run this script through a web browser */
-if(!isset($_SERVER["argv"][0]) || isset($_SERVER['REQUEST_METHOD'])  || isset($_SERVER['REMOTE_ADDR'])) {
-	die("<br><strong>This script is only meant to run at the command line.</strong>");
-}
+//if(!isset($_SERVER["argv"][0]) || isset($_SERVER['REQUEST_METHOD'])  || isset($_SERVER['REMOTE_ADDR'])) {
+// 	die("<br><strong>This script is only meant to run at the command line.</strong>");
+// }
 
 /* let PHP run just as long as it has to */
 ini_set("max_execution_time", "0");
@@ -48,14 +48,6 @@ include_once($config["base_path"] . '/lib/html_form_template.php');
 include_once($config["base_path"] . '/lib/template.php');
 include_once($config["base_path"] . '/plugins/unifiedtrees/utdbfunctions.php');
 
-// Should be checked elsewhere, but check here too!
-$ut_enabled = read_config_option("unifiedtrees_use_ut");
-$ut_server = read_config_option("unifiedtrees_build_freq");
-
-if($ut_enabled != "on" || !is_numeric($ut_server)) {
-	die("Either UT is not 'on', or this instance is not a server: ".$ut_server."\n");
-}
-
 /* process calling arguments */
 $parms = $_SERVER["argv"];
 array_shift($parms);
@@ -64,6 +56,8 @@ $debug = FALSE;
 $forcerun = FALSE;
 
 foreach($parms as $parameter) {
+	@list($arg, $value) = @explode('=', $parameter);
+	switch($arg) {
 	case "-d":
 		$debug = TRUE;
 		break;
@@ -89,16 +83,26 @@ foreach($parms as $parameter) {
 	}
 }
 
+// Should be checked elsewhere, but check here too!
+$ut_enabled = read_config_option("unifiedtrees_use_ut");
+$ut_server = read_config_option("unifiedtrees_build_freq");
+
+if(($ut_enabled != "on" || !is_numeric($ut_server)) && $forcerun === FALSE) {
+	die("Either UT is not 'on', or this instance is not a server: ".$ut_server."\n");
+}
+
 // We're just gonna do this every time.
-db_execute("DROP TABLE plugin_unifiedtrees_tree");
+db_execute("DROP TABLE IF EXISTS plugin_unifiedtrees_tree");
 
 ut_setup_tree_table();
 
 $dbs = ut_setup_dbs();
 
-$fulltree = ut_build_tree();
+$fulltree = ut_build_tree($dbs);
 
 ut_save_tree($fulltree);
+
+// $newtree = ut_read_tree();
 
 function display_help () {
 	print "BuildTrees for UT v0.2, Copyright 2014 - Eric Stewart\n\n";

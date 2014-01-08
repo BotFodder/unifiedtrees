@@ -39,6 +39,8 @@ function plugin_unifiedtrees_install () {
 	api_plugin_register_hook('unifiedtrees', 'draw_navigation_text', 'ut_draw_navigation_text', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'config_settings', 'ut_config_settings', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'utilities_action', 'ut_utilities_action', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'utilities_list', 'ut_utilities_list', 'setup.php');
 
 	api_plugin_register_realm('unifiedtrees', 'tree_sources.php', 'Set Source Trees', 1);
 
@@ -88,8 +90,13 @@ function unifiedtrees_check_upgrade () {
 				"webpage='" . $version["url"] . "' " .
 				"WHERE directory='" . $version["name"] . "' ");
 	}
-	// This is new, and if we've been upgraded from 0.1, may not exist.
+	// These are new, and if we've been upgraded from 0.1, may not exist.
 	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'utilities_action', 'ut_utilities_action', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'utilities_list', 'ut_utilities_list', 'setup.php');
+	if(api_plugin_is_enabled('unifiedtrees')) {
+		api_plugin_enable_hooks('unifiedtrees');
+	}
 	db_execute("REPLACE INTO settings (name, value) VALUES ('plugin_unifiedtrees_version', '".$version['version']."')");
 }
 
@@ -107,7 +114,7 @@ function plugin_unifiedtrees_version () {
 
 function ut_utilities_action ($action) {
 	if ($action == 'ut_clear') {
-		db_execute('DELETE FROM plugin_unifiedtrees_tree');
+		db_execute('DROP TABLE plugin_unifiedtrees_tree');
 
 		include_once('./include/top_header.php');
 		utilities();
@@ -119,14 +126,14 @@ function ut_utilities_action ($action) {
 function ut_utilities_list () {
 	global $colors;
 
-	html_header(array(""), 2);
+	html_header(array("Unified Tree"), 2);
 	?>
 	<tr bgcolor="#<?php print $colors["form_alternate1"];?>">
 		<td class="textArea">
-			<a href='utilities.php?action=ut_clear'>Clear Unified_Tree</a>
+			<a href='utilities.php?action=ut_clear'>Clear Unified Tree</a>
 		</td>
 		<td class="textArea">
-			This will delete the created Unified Tree on this master, which should trigger a rebuilding of the tree.
+			This will drop the Unified Trees tree table on this master, which should trigger a rebuilding of the tree.
 		</td>
 	</tr>
 	<?php
@@ -181,7 +188,7 @@ function ut_config_settings () {
 			),
 		'unifiedtrees_sort_leaves' => array(
 			'friendly_name' => "Sort Leaves",
-			'description' => "This will sort (alphabetically) all the branches/leaves of a tree once they've been pulled from all databases.",
+			'description' => "This will sort (alphabetically) all the branches/leaves of a tree once they've been pulled from all databases.  There should be no objection to this; because of how the different databases are processed, failure to sort the leaves may result in trees not displaying properly (including some information not appearing at all).",
 			'method' => 'checkbox',
 			'default' => 'on',
 			),
@@ -241,7 +248,7 @@ function ut_draw_navigation_text ($nav) {
 	$nav["tree_sources.php:"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
 	$nav["tree_sources.php:edit"] = array("title" => "UT - Sources - Edit", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
 	$nav["tree_sources.php:actions"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
-//	$nav["utilities.php:ut_clear"] = array("title" => "Clear Unified Tree", "mapping" => "index.php:,utilities.php:", "url" => "tree_sources.php", "level" => "1");
+	$nav["utilities.php:ut_clear"] = array("title" => "Clear Unified Tree", "mapping" => "index.php:,utilities.php:", "url" => "tree_sources.php", "level" => "1");
 	return $nav;
 }
 
@@ -278,7 +285,7 @@ function ut_poller_bottom() {
 	}
 
 	$last_build = read_config_option("unifiedtrees_last_build");
-	if($last_build != '' && time() - $last_build < $frequency) {
+	if($last_build != '' && time() - $last_build < ($frequency * 60)) {
 		return;
 	}
 	$command_string = trim(read_config_option("path_php_binary"));
@@ -287,7 +294,7 @@ function ut_poller_bottom() {
 	if(trim($command_string) == '')
 		$command_string = "php";
 
-	cacti_log("UnifiedTrees building tree.\n");
+	cacti_log("UnifiedTrees building tree. Time: ".time()." Last build: $last_build Frequency: $frequency\n");
 
 	$extra_args = ' -q ' . $config['base_path'] . '/plugins/unifiedtrees/build_tree.php';
 

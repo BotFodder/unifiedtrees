@@ -97,12 +97,70 @@ foreach($parms as $parameter) {
 $ut_mode = read_config_option("unifiedtrees_build_freq");
 if ($ut_mode == "always") {
 	ut_build_always();
+}elseif (is_numeric($ut_mode)) {
+	$tables = db_fetch_assoc("SHOW TABLES LIKE 'plugin_unifiedtrees_tree'");
+	if(sizeof($tables) == 0) {
+		include_once($config["base_path"] . "/plugins/unifiedtrees/build_tree.php");
+		db_execute("REPLACE INTO settings (name, value) VALUES ('unifiedtrees_last_build','".time()."')");
+		$fulltree = ut_read_tree();
+		if(sizeof($fulltree) == 0) {
+			ut_print_local_tree();
+		}else{
+			ut_print_tree($fulltree);
+		}
+	}else{
+		$fulltree = ut_read_tree();
+		if(sizeof($fulltree) == 0) {
+			ut_print_local_tree();
+		}else{
+			ut_print_tree($fulltree);
+		}
+	}
+}elseif ($ut_mode == "client") {
+	$sdb = ut_get_server_db();
+	if($sdb === FALSE) {
+		ut_print_local_tree();
+	}else{
+		$fulltree = ut_read_tree($sdb);
+		if(sizeof($fulltree) == 0) {
+			ut_print_local_tree();
+		}else{
+			ut_print_tree($fulltree);
+		}
+	}
 }
 
 function ut_build_always() {
 	$dbs = ut_setup_dbs();
 	$fulltree = ut_build_tree($dbs);
 	ut_print_tree($fulltree);
+}
+
+function ut_print_local_tree() {
+// Print the local tree.  This code copied from html_tree.php.
+	/* get current time */
+	list($micro,$seconds) = explode(" ", microtime());
+	$current_time = $seconds + $micro;
+	$expand_hosts = read_graph_config_option("expand_hosts");
+
+	if (!isset($_SESSION['dhtml_tree'])) {
+		$dhtml_tree = create_dhtml_tree();
+		$_SESSION['dhtml_tree'] = $dhtml_tree;
+	}else{
+		$dhtml_tree = $_SESSION['dhtml_tree'];
+		if (($dhtml_tree[0] + read_graph_config_option("page_refresh") < $current_time) || ($expand_hosts != $dhtml_tree[1])) {
+			$dhtml_tree = create_dhtml_tree();
+			$_SESSION['dhtml_tree'] = $dhtml_tree;
+		}else{
+			$dhtml_tree = $_SESSION['dhtml_tree'];
+		}
+	}
+
+	$total_tree_items = sizeof($dhtml_tree) - 1;
+
+	for ($i = 2; $i <= $total_tree_items; $i++) {
+		print $dhtml_tree[$i];
+	}
 }
 
 function ut_print_tree($fulltree) {
