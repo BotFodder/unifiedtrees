@@ -128,9 +128,6 @@ if ($ut_mode == "always") {
 	}
 }
 
-// Not 100% necewssary but I like having it here.
-exit;
-
 function ut_build_always() {
 	$dbs = ut_setup_dbs();
 	$fulltree = ut_build_tree($dbs);
