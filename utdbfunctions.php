@@ -37,6 +37,7 @@ if (strpos($dir, 'plugins') !== false) {
 
 include_once("./include/global.php");
 include_once($config["library_path"] . "/database.php");
+include_once($config["base_path"] . '/lib/tree.php');
 
 // Set up the tree table.
 function ut_setup_tree_table() {
@@ -93,10 +94,11 @@ $fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['host_id'] = $leaf
 
 // Build a tree from multiple databases.
 function ut_build_tree($databases) {
-
 	foreach($databases as $db) {
+		utdb_debug($db['base_url']."\n");
 		$tiername = array();
 		$trees = db_fetch_assoc("SELECT * from graph_tree", TRUE, $db['dbconn']);
+		utdb_debug("Tree size ".sizeof($trees)."\n");
 		foreach($trees as $tree) {
 			$tiername[0] = "0";
 			if(!isset($fulltree['tree'][$tree['name']]['id'][$tiername[0]])) {
@@ -114,6 +116,7 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
  ON (graph_tree_items.host_id=host.id)
  WHERE graph_tree_items.graph_tree_id=".$tree['id']."
  ORDER BY graph_tree_items.order_key", TRUE, $db['dbconn']);
+			utdb_debug("Treeitems: ".sizeof($treeitems)."\n");
 			if (is_array($treeitems)) {
 				foreach($treeitems as $treeitem) {
 					$tier = tree_tier($treeitem['order_key']);
@@ -123,6 +126,7 @@ if(isset($treeitem['title']) && $treeitem['title'] != "" && $treeitem['host_id']
 }elseif(isset($treeitem['description']) && $treeitem['host_id'] != 0) {
 	$stn = $treeitem['description']."|".$tier;
 }else{
+	utdb_debug("No host_id/title\n");
 //	print "TREE BUG - host_id? title?\n";
 }
 					if($tier == $currenttier) {
@@ -315,5 +319,11 @@ $why";
 		}
 	}
 	return FALSE;
+}
+
+function utdb_debug($msg) {
+	global $debug;
+
+	if($debug) print $msg;
 }
 ?>

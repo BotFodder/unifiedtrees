@@ -36,20 +36,17 @@ if (strpos($dir, 'plugins') !== false) {
 }
 
 include_once("./include/global.php");
-include_once($config["base_path"] . '/lib/ping.php');
-include_once($config["base_path"] . '/lib/utility.php');
-include_once($config["base_path"] . '/lib/api_data_source.php');
-include_once($config["base_path"] . '/lib/api_graph.php');
-include_once($config["base_path"] . '/lib/snmp.php');
-include_once($config["base_path"] . '/lib/data_query.php');
-include_once($config["base_path"] . '/lib/api_device.php');
+// include_once($config["base_path"] . '/lib/utility.php');
+// include_once($config["base_path"] . '/lib/api_data_source.php');
+// include_once($config["base_path"] . '/lib/api_graph.php');
+// include_once($config["base_path"] . '/lib/data_query.php');
+// include_once($config["base_path"] . '/lib/api_device.php');
 
-include_once($config["base_path"] . '/lib/sort.php');
-include_once($config["base_path"] . '/lib/html_form_template.php');
-include_once($config["base_path"] . '/lib/template.php');
+// include_once($config["base_path"] . '/lib/sort.php');
+// include_once($config["base_path"] . '/lib/html_form_template.php');
+// include_once($config["base_path"] . '/lib/template.php');
 
-include_once($config["base_path"] . '/lib/api_tree.php');
-include_once($config["base_path"] . '/lib/tree.php');
+// include_once($config["base_path"] . '/lib/api_tree.php');
 include_once($config["base_path"] . '/lib/html_tree.php');
 include_once($config["base_path"] . '/plugins/unifiedtrees/utdbfunctions.php');
 

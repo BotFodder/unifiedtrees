@@ -35,17 +35,6 @@ if (strpos($dir, 'plugins') !== false) {
 }
 
 include("./include/global.php");
-include_once($config["base_path"] . '/lib/ping.php');
-include_once($config["base_path"] . '/lib/utility.php');
-include_once($config["base_path"] . '/lib/api_data_source.php');
-include_once($config["base_path"] . '/lib/api_graph.php');
-include_once($config["base_path"] . '/lib/snmp.php');
-include_once($config["base_path"] . '/lib/data_query.php');
-include_once($config["base_path"] . '/lib/api_device.php');
-
-include_once($config["base_path"] . '/lib/sort.php');
-include_once($config["base_path"] . '/lib/html_form_template.php');
-include_once($config["base_path"] . '/lib/template.php');
 include_once($config["base_path"] . '/plugins/unifiedtrees/utdbfunctions.php');
 
 /* process calling arguments */
@@ -91,14 +80,16 @@ if(($ut_enabled != "on" || !is_numeric($ut_server)) && $forcerun === FALSE) {
 	die("Either UT is not 'on', or this instance is not a server: ".$ut_server."\n");
 }
 
-$dbs = ut_setup_dbs();
-
 // We're just gonna do this every time.
 db_execute("DROP TABLE IF EXISTS plugin_unifiedtrees_tree");
 
 ut_setup_tree_table();
 
+$dbs = ut_setup_dbs();
+utdb_debug("Size of dbs: ".sizeof($dbs)."\n");
+
 $fulltree = ut_build_tree($dbs);
+utdb_debug("Size of tree: ".sizeof($fulltree['tree'])."\n");
 
 ut_save_tree($fulltree);
 
