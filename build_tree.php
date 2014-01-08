@@ -91,21 +91,19 @@ if(($ut_enabled != "on" || !is_numeric($ut_server)) && $forcerun === FALSE) {
 	die("Either UT is not 'on', or this instance is not a server: ".$ut_server."\n");
 }
 
+$dbs = ut_setup_dbs();
+
 // We're just gonna do this every time.
 db_execute("DROP TABLE IF EXISTS plugin_unifiedtrees_tree");
 
 ut_setup_tree_table();
 
-$dbs = ut_setup_dbs();
-
 $fulltree = ut_build_tree($dbs);
 
 ut_save_tree($fulltree);
 
-// $newtree = ut_read_tree();
-
 function display_help () {
-	print "BuildTrees for UT v0.2, Copyright 2014 - Eric Stewart\n\n";
+	print "BuildTrees for UT v0.5, Copyright 2014 - Eric Stewart\n\n";
 	print "usage: findhosts.php [-d] [-h] [--help] [-v] [--version]\n\n";
 	print "-f	   - Force the execution of a discovery process\n";
 	print "-d	   - Display verbose output during execution\n";

@@ -36,23 +36,9 @@ if (strpos($dir, 'plugins') !== false) {
 }
 
 include_once("./include/global.php");
-include_once($config["base_path"] . '/lib/ping.php');
-include_once($config["base_path"] . '/lib/utility.php');
-include_once($config["base_path"] . '/lib/api_data_source.php');
-include_once($config["base_path"] . '/lib/api_graph.php');
-include_once($config["base_path"] . '/lib/snmp.php');
-include_once($config["base_path"] . '/lib/data_query.php');
-include_once($config["base_path"] . '/lib/api_device.php');
-
-include_once($config["base_path"] . '/lib/sort.php');
-include_once($config["base_path"] . '/lib/html_form_template.php');
-include_once($config["base_path"] . '/lib/template.php');
-
-include_once($config["base_path"] . '/lib/api_tree.php');
-include_once($config["base_path"] . '/lib/tree.php');
-include_once($config["base_path"] . '/lib/html_tree.php');
 include_once($config["library_path"] . "/database.php");
 
+// Set up the tree table.
 function ut_setup_tree_table() {
 	$data = array();
 	$data['columns'][] = array('name' => 'id', 'type' => 'int(8)', 'NULL' => false, 'auto_increment' => true);
@@ -60,8 +46,6 @@ function ut_setup_tree_table() {
 	$data['columns'][] = array('name' => 'treename', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'name', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'fullname', 'type' => 'varchar(255)', 'NULL' => false, 'default' => '');
-// 	$data['columns'][] = array('name' => 'tree_id', 'type' => 'int(4)', 'NULL' => false, 'default' => 0);
-// 	$data['columms'][] = array('name' => 'leaf_id', 'type' => 'int(4)', 'NULL' => true);
 	$data['columns'][] = array('name' => 'xID', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'url', 'type' => 'varchar(150)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'host_id', 'type' => 'int(8)', 'NULL' => false, 'default' => 0);
@@ -72,18 +56,14 @@ function ut_setup_tree_table() {
 	api_plugin_db_table_create('unifiedtrees', 'plugin_unifiedtrees_tree', $data);
 }
 
+// Save the tree to the table
 function ut_save_tree($fulltree) {
 	foreach($fulltree['tree'] as $treename => $tree) {
 		foreach($tree['id'] as $leafid => $leaf) {
 			$tier = $leaf['tier'];
 			$name = $leaf['name'];
 			$fullname = $leaf['fullname'];
-// 			$tree_id = $leaf['tree_id'];
-// 			if(!isset($leaf['leaf_id']) || $leaf['leaf_id'] === FALSE) {
-// 				$leaf_id = "NULL";
-// 			}else{
-// 				$leaf_id = $leaf['leaf_id'];
-// 			}
+
 			$xID = $leaf['xID'];
 			$url = $leaf['url'];
 			$host_id = $leaf['host_id'];
@@ -92,6 +72,7 @@ function ut_save_tree($fulltree) {
 	}
 }
 
+// Read the tree in from a table and optionally specify the server to get it from
 function ut_read_tree($database = FALSE) {
 	global $cnn_id;
 	if (!$database) {
@@ -110,6 +91,7 @@ $fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['host_id'] = $leaf
 	return $fulltree;
 }
 
+// Build a tree from multiple databases.
 function ut_build_tree($databases) {
 
 	foreach($databases as $db) {
@@ -121,8 +103,6 @@ function ut_build_tree($databases) {
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tier'] = 0;
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['fullname'] = $tiername[0];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['name'] = $tree['name'];
-// $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tree_id'] = $tree['id'];
-// $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['leaf_id'] = FALSE;
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = "tree_".$tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['url'] = $db['base_url']."graph_view.php?action=tree&amp;tree_id=".$tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
@@ -147,16 +127,11 @@ if(isset($treeitem['title']) && $treeitem['title'] != "" && $treeitem['host_id']
 }
 					if($tier == $currenttier) {
 						$tiername[$tier] = $tiername[$tier-1]."|".$stn;
-//						print $tiername[$tier]."\n";
 					}elseif ($tier > $currenttier) {
-//						print "TIER $tier CURRENT $currenttier\n";
 						$tiername[$tier] = $tiername[$currenttier]."|".$stn;
-//						print $tiername[$tier]."\n";
 						$currenttier = $tier;
 					}elseif ($tier < $currenttier) {
-//						print "TIER $tier CURRENT $currenttier\n";
 						$tiername[$tier] = $tiername[$tier-1]."|".$stn;
-//						print $tiername[$tier]."\n";
 						$currenttier = $tier;
 					}
 if(!isset($fulltree['tree'][$tree['name']]['id'][$tiername[$tier]])) {
@@ -171,8 +146,6 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['fullname']=$tiername[$
 $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID']="tree_".$tree['id']."_leaf_".$treeitem['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url;
 }
-//					print "TREE: ".$tree['name']." FULL: ".$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['fullname']."
-//".$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']."\n";
 				}
 			}else{
 				print "Not an array $treeitems\n";
@@ -182,6 +155,7 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url;
 	return $fulltree;
 }
 
+// Servers and Always configurations need this.
 function ut_setup_dbs() {
 	global $cnn_id, $config, $database_default, $database_username, $database_port, $database_password, $url_path;
 
@@ -267,6 +241,7 @@ BASEURL: ".$other['base_url']."
 	return $answer;
 }
 
+// For clients, we want the first server that qualifies.
 function ut_get_server_db() {
 	global $config, $database_default, $database_username, $database_port, $database_password;
 

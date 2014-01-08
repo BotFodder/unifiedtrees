@@ -64,11 +64,6 @@ foreach($parms as $parameter) {
 	@list($arg, $value) = @explode('=', $parameter);
 
 	switch ($arg) {
-/*
-	case "-r":
-		dpdiscover_recreate_tables();
-		break;
-*/
 	case "-d":
 		$debug = TRUE;
 		break;
@@ -97,9 +92,11 @@ foreach($parms as $parameter) {
 $ut_mode = read_config_option("unifiedtrees_build_freq");
 if ($ut_mode == "always") {
 	ut_build_always();
+	// Hey!  We're a server.  Just grab the local tree.
 }elseif (is_numeric($ut_mode)) {
 	$tables = db_fetch_assoc("SHOW TABLES LIKE 'plugin_unifiedtrees_tree'");
 	if(sizeof($tables) == 0) {
+		// Oh shit.  That shouldn't be happening.  Well, let's build the tree.
 		include_once($config["base_path"] . "/plugins/unifiedtrees/build_tree.php");
 		db_execute("REPLACE INTO settings (name, value) VALUES ('unifiedtrees_last_build','".time()."')");
 		$fulltree = ut_read_tree();
@@ -117,6 +114,7 @@ if ($ut_mode == "always") {
 		}
 	}
 }elseif ($ut_mode == "client") {
+	// Connect the first server that can respond and get the tree from there.
 	$sdb = ut_get_server_db();
 	if($sdb === FALSE) {
 		ut_print_local_tree();
@@ -129,6 +127,9 @@ if ($ut_mode == "always") {
 		}
 	}
 }
+
+// Not 100% necewssary but I like having it here.
+exit;
 
 function ut_build_always() {
 	$dbs = ut_setup_dbs();
@@ -170,11 +171,18 @@ foldersTree.xID = \"root\"\n";
 		ksort($fulltree['tree'], SORT_STRING);
 	}
 	foreach($fulltree['tree'] as $treename => $tree) {
+// Tempted to remove this option.  Wierd shit can happen if you don't sort the
+// leaves of a tree ... like the tree base not appearing properly.
 		if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
 			ksort($tree['id'], SORT_STRING);
 		}
 		foreach($tree['id'] as $leafid => $leaf) {
 			print "ou".$leaf['tier']." = insFld(";
+// I may want to fix one issue with not properly sorting the tree by moving
+// the tier 0 case out of this loop, since tier 0 should be part of the root
+// definition of a tree.  Maybe in 0.6 when I feel like screwing with it.
+// Thing is, some other weird shit happens too, so sorting is still strongly
+// recommended.
 			if($leaf['tier'] == 0) {
 				print "foldersTree";
 			}else{

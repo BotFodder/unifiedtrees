@@ -103,7 +103,7 @@ function unifiedtrees_check_upgrade () {
 function plugin_unifiedtrees_version () {
 	return array(
 		'name'     => 'unifiedtrees',
-			'version'  => '0.2',
+			'version'  => '0.5',
 			'longname' => 'Unified Trees',
 			'author'   => 'Eric Stewart',
 			'homepage' => 'http://runningoffatthemouth.com/?p=1089',
@@ -244,7 +244,6 @@ function ut_config_arrays () {
 }
 
 function ut_draw_navigation_text ($nav) {
-//	$nav["dpdiscover.php:"] = array("title" => "DPDiscover", "mapping" => "", "url" => "dpdiscover.php", "level" => "0");
 	$nav["tree_sources.php:"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
 	$nav["tree_sources.php:edit"] = array("title" => "UT - Sources - Edit", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");
 	$nav["tree_sources.php:actions"] = array("title" => "Unified Trees - Sources", "mapping" => "index.php:", "url" => "tree_sources.php", "level" => "1");

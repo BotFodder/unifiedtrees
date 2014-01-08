@@ -40,5 +40,26 @@ every other install.
 
 ----[ Changelog
 
+    --- 0.5 ---
+    Skipping some version values as functionality has expanded greatly.
+    - You can now institute a "server/clients" setup (multiple servers
+      possible).
+      - Server: runs a poller task that will build a tree at a specified
+        interval and save the tree in a special memory based table.  When it
+        needs to render that tree, it pulls the tree out of it's own table and
+        displays it.
+      - Client: connects to first enabled/responding/has tree table entry in
+        its "tree sources" list, pulls the tree out of the memory based table
+        on that server, and displays it.
+      - "Always": Unified Trees operates as it did in 0.1 - pulling trees from
+        all servers in its "tree sources" list (every time a tree would be
+        loaded) and displays it.
+    - Configured as a client with multiple enabled servers, but with "disable
+      bad servers" active, a client will disable a server that does not have
+      the ut_tree table (or does not respond at all) and will no longer try to
+      pull the tree from that server.
+    - "Fatal Failures" at any point should simply result in the local tree
+      being displayed as it normally would.
+
     --- 0.1 ---
     Initial release.
