@@ -1,5 +1,5 @@
---- lib/html_tree.php.orig	2013-10-21 13:48:31.758662246 -0400
-+++ lib/html_tree.php	2014-01-10 10:53:04.657699122 -0500
+--- lib/html_tree.dist	2013-12-09 13:08:28.000000000 -0500
++++ lib/html_tree.php	2013-12-09 13:08:54.000000000 -0500
 @@ -505,6 +505,11 @@
  	PERSERVESTATE = 1
  	HIGHLIGHT = 1
@@ -20,16 +20,3 @@
  	?>
  	//-->
  	</script>
-@@ -760,7 +766,12 @@
- 
- 	print "<script type=\"text/javascript\">\n";
- 	print "<!--\n";
-+if(isset($_REQUEST["xID"])) {
-+	$xid = get_request_var_request("xID");
-+	print "myNode = findObj(\"$xid\")\n";
-+}else{
- 	print "myNode = findObj(\"$nodeid\")\n";
-+}
- 	print "myNode.forceOpeningOfAncestorFolders();\n";
- 	print "highlightObjLink(myNode)\n";
- 	print "//-->\n";

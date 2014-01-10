@@ -94,18 +94,28 @@ $fulltree['tree'][$leaf['treename']]['id'][$leaf['fullname']]['host_id'] = $leaf
 
 // Build a tree from multiple databases.
 function ut_build_tree($databases) {
+	$btid = 1;
+	$treenames = array();
 	foreach($databases as $db) {
 		utdb_debug($db['base_url']."\n");
 		$tiername = array();
 		$trees = db_fetch_assoc("SELECT * from graph_tree", TRUE, $db['dbconn']);
 		utdb_debug("Tree size ".sizeof($trees)."\n");
+// IDs in xID must be unique within the built tree.  But the URL should refer
+// to the tree ID on the server in question.
 		foreach($trees as $tree) {
+			if(!isset($treenames[$tree['name']])) {
+				$treenames[$tree['name']]['tid'] = $btid;
+				$treenames[$tree['name']]['lid'] = 1;
+				++$btid;
+			}
 			$tiername[0] = "0";
 			if(!isset($fulltree['tree'][$tree['name']]['id'][$tiername[0]])) {
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tier'] = 0;
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['fullname'] = $tiername[0];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['name'] = $tree['name'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = "tree_".$tree['id'];
+// $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = "tree_".$tree['id'];
+$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = $treenames[$tree['name']]['tid'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['url'] = $db['base_url']."graph_view.php?action=tree&amp;tree_id=".$tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
 			}
@@ -147,9 +157,11 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['name'] = $treeitem['ti
 $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['tier']=$tier;
 $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['host_id']=$treeitem['host_id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['fullname']=$tiername[$tier];
-$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID']="tree_".$tree['id']."_leaf_".$treeitem['id'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url;
+// $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID']="tree_".$treenames[$tree['name']]."_leaf_".$treeitem['id'];
+$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID']=$treenames[$tree['name']]['tid']."_".$treenames[$tree['name']]['lid'];
+$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url."&amp;xID=".$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID'];
 }
+					++$treenames[$tree['name']]['lid'];
 				}
 			}else{
 				print "Not an array $treeitems\n";
