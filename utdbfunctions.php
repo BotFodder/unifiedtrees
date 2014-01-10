@@ -47,7 +47,7 @@ function ut_setup_tree_table() {
 	$data['columns'][] = array('name' => 'treename', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'name', 'type' => 'varchar(30)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'fullname', 'type' => 'varchar(255)', 'NULL' => false, 'default' => '');
-	$data['columns'][] = array('name' => 'xID', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
+//	$data['columns'][] = array('name' => 'xID', 'type' => 'varchar(20)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'url', 'type' => 'varchar(150)', 'NULL' => false, 'default' => '');
 	$data['columns'][] = array('name' => 'host_id', 'type' => 'int(8)', 'NULL' => false, 'default' => 0);
 	$data['primary'] = 'id';
@@ -65,10 +65,10 @@ function ut_save_tree($fulltree) {
 			$name = $leaf['name'];
 			$fullname = $leaf['fullname'];
 
-			$xID = $leaf['xID'];
+//			$xID = $leaf['xID'];
 			$url = $leaf['url'];
 			$host_id = $leaf['host_id'];
-			db_execute("INSERT INTO plugin_unifiedtrees_tree (tier, treename, name, fullname, xID, url, host_id) VALUES ($tier, '$treename', '$name', '$fullname', '$xID', '$url', $host_id)");
+			db_execute("INSERT INTO plugin_unifiedtrees_tree (tier, treename, name, fullname, url, host_id) VALUES ($tier, '$treename', '$name', '$fullname', '$url', $host_id)");
 		}
 	}
 }

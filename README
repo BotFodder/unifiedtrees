@@ -4,7 +4,7 @@
     Contact ........ eric@ericdives.com
     Home Site ...... http://runningoffatthemouth.com
     Program ........ Unified Trees
-    Version ........ 0.1
+    Version ........ 0.6
     Purpose ........ Pull Tree information from other Cacti installs
 
 *******************************************************************************/
@@ -39,6 +39,16 @@ every other install.
 
 
 ----[ Changelog
+
+    --- 0.6 ---
+    While there is no new options or features, the fact that this bugfix
+    resolves a major operability issue rates moving to 0.6 (as opposed to
+    0.51).
+    - A bug exists in all previous versions involving collisions of what is
+      supposed to be a unique ID within the tree structure.  There's more
+      information on the blog post linked above.
+    - To fully resolve the issue the patch for html_tree.php has expanded a
+      bit.
 
     --- 0.5 ---
     Skipping some version values as functionality has expanded greatly.

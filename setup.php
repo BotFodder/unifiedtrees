@@ -103,7 +103,7 @@ function unifiedtrees_check_upgrade () {
 function plugin_unifiedtrees_version () {
 	return array(
 		'name'     => 'unifiedtrees',
-			'version'  => '0.5',
+			'version'  => '0.6',
 			'longname' => 'Unified Trees',
 			'author'   => 'Eric Stewart',
 			'homepage' => 'http://runningoffatthemouth.com/?p=1089',
