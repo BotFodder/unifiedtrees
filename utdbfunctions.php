@@ -103,19 +103,21 @@ function ut_build_tree($databases) {
 		utdb_debug("Tree size ".sizeof($trees)."\n");
 // IDs in xID must be unique within the built tree.  But the URL should refer
 // to the tree ID on the server in question.
+// On second thought, let's remove the xID stuff from here and put it in
+// print_tree.
 		foreach($trees as $tree) {
-			if(!isset($treenames[$tree['name']])) {
-				$treenames[$tree['name']]['tid'] = $btid;
-				$treenames[$tree['name']]['lid'] = 1;
-				++$btid;
-			}
+//			if(!isset($treenames[$tree['name']])) {
+//				$treenames[$tree['name']]['tid'] = $btid;
+//				$treenames[$tree['name']]['lid'] = 1;
+//				++$btid;
+//			}
 			$tiername[0] = "0";
 			if(!isset($fulltree['tree'][$tree['name']]['id'][$tiername[0]])) {
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['tier'] = 0;
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['fullname'] = $tiername[0];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['name'] = $tree['name'];
 // $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = "tree_".$tree['id'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = $treenames[$tree['name']]['tid'];
+//$fulltree['tree'][$tree['name']]['id'][$tiername[0]]['xID'] = $treenames[$tree['name']]['tid'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['url'] = $db['base_url']."graph_view.php?action=tree&amp;tree_id=".$tree['id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
 			}
@@ -137,7 +139,6 @@ if(isset($treeitem['title']) && $treeitem['title'] != "" && $treeitem['host_id']
 	$stn = $treeitem['description']."|".$tier;
 }else{
 	utdb_debug("No host_id/title\n");
-//	print "TREE BUG - host_id? title?\n";
 }
 					if($tier == $currenttier) {
 						$tiername[$tier] = $tiername[$tier-1]."|".$stn;
@@ -158,8 +159,9 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['tier']=$tier;
 $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['host_id']=$treeitem['host_id'];
 $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['fullname']=$tiername[$tier];
 // $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID']="tree_".$treenames[$tree['name']]."_leaf_".$treeitem['id'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID']=$treenames[$tree['name']]['tid']."_".$treenames[$tree['name']]['lid'];
-$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url."&amp;xID=".$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID'];
+//$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID']=$treenames[$tree['name']]['tid']."_".$treenames[$tree['name']]['lid'];
+$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url;
+// $fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['url']=$url."&amp;xID=".$fulltree['tree'][$tree['name']]['id'][$tiername[$tier]]['xID'];
 }
 					++$treenames[$tree['name']]['lid'];
 				}
@@ -185,8 +187,10 @@ function ut_setup_dbs() {
 	}
 	$answer[0]['dbconn'] = $cnn_id;
 
+// ORDER BY so that *maybe* two servers will have trees that resemble one
+// one another.  You can always hope.
 	$remote = db_fetch_assoc("SELECT * FROM plugin_unifiedtrees_sources
- WHERE enable_db='on'"); 
+ WHERE enable_db='on' ORDER BY db_address"); 
 	foreach ($remote as $other) {
 		$tmp = array();
 		if(!isset($other['db_name']) || $other['db_name'] == '') {

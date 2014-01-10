@@ -150,15 +150,24 @@ function ut_print_local_tree() {
 function ut_print_tree($fulltree) {
 	print "foldersTree = gFld(\"\", \"\")
 foldersTree.xID = \"root\"\n";
+// I'd remove this to avoid multiserver/always treeid issues excempt that in
+// my own case I have a "T" that needs to come before any "S".  Oh well.
+// We can fix that with some ugly code.
+	$treenames = array_keys($fulltree['tree']);
+	sort($treenames);
 	if(read_config_option("unifiedtrees_sort_trees") == 'on') {
 		ksort($fulltree['tree'], SORT_STRING);
 	}
 	foreach($fulltree['tree'] as $treename => $tree) {
+		$treeid = array_search($treename, $treenames);
 // Tempted to remove this option.  Wierd shit can happen if you don't sort the
 // leaves of a tree ... like the tree base not appearing properly.
+// Even ugly code won't work here since leaf structures can get deep and
+// complex.
 		if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
 			ksort($tree['id'], SORT_STRING);
 		}
+		$lid = 1;
 		foreach($tree['id'] as $leafid => $leaf) {
 			print "ou".$leaf['tier']." = insFld(";
 // I may want to fix one issue with not properly sorting the tree by moving
@@ -168,16 +177,21 @@ foldersTree.xID = \"root\"\n";
 // recommended.
 			if($leaf['tier'] == 0) {
 				print "foldersTree";
+				$xid = $treeid;
 			}else{
 				print "ou".($leaf['tier']-1);
+				$xid = $treeid."_".$lid;
+				++$lid;
 			}
 			print ", gFld(\"";
 			if($leaf['host_id'] > 0) {
 				print "Host: ";
 			}
+			$leaf['url'] .= "&amp;xID=$xid";
 			print $leaf['name']."\", \"".$leaf['url']."\"))
-ou".$leaf['tier'].".xID = \"".$leaf['xID']."\"\n";
+ou".$leaf['tier'].".xID = \"".$xid."\"\n";
 		}
+		++$treeid;
 	}
 }
 ?>
