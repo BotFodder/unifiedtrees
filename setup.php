@@ -284,7 +284,8 @@ function ut_poller_bottom() {
 	}
 
 	$last_build = read_config_option("unifiedtrees_last_build");
-	if($last_build != '' && time() - $last_build < ($frequency * 60)) {
+	$tables = db_fetch_assoc("SHOW TABLES LIKE 'plugin_unifiedtrees_tree'");
+	if($last_build != '' && time() - $last_build < ($frequency * 60) && sizeof($tables) > 0) {
 		return;
 	}
 	$command_string = trim(read_config_option("path_php_binary"));
@@ -293,7 +294,7 @@ function ut_poller_bottom() {
 	if(trim($command_string) == '')
 		$command_string = "php";
 
-	cacti_log("UnifiedTrees building tree. Time: ".time()." Last build: $last_build Frequency: $frequency\n");
+	cacti_log("UnifiedTrees building tree. Time: ".time()." Last build: $last_build Frequency: $frequency Table exists: ".sizeof($tables));
 
 	$extra_args = ' -q ' . $config['base_path'] . '/plugins/unifiedtrees/build_tree.php';
 
