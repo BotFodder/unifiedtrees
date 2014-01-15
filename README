@@ -4,7 +4,7 @@
     Contact ........ eric@ericdives.com
     Home Site ...... http://runningoffatthemouth.com
     Program ........ Unified Trees
-    Version ........ 0.6
+    Version ........ 0.7
     Purpose ........ Pull Tree information from other Cacti installs
 
 *******************************************************************************/
@@ -39,6 +39,11 @@ every other install.
 
 
 ----[ Changelog
+
+    --- 0.7 ---
+    Minor new feature triggered by a development site need: "Other" tree.
+    Set the name of a tree you want to show up at the very end of the list of
+    trees.
 
     --- 0.6 ---
     While there is no new options or features, the fact that this bugfix

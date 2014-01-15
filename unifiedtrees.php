@@ -148,6 +148,7 @@ function ut_print_local_tree() {
 }
 
 function ut_print_tree($fulltree) {
+	$othertree = read_config_option("unifiedtrees_other_tree");
 	print "foldersTree = gFld(\"\", \"\")
 foldersTree.xID = \"root\"\n";
 // I'd remove this to avoid multiserver/always treeid issues excempt that in
@@ -159,39 +160,50 @@ foldersTree.xID = \"root\"\n";
 		ksort($fulltree['tree'], SORT_STRING);
 	}
 	foreach($fulltree['tree'] as $treename => $tree) {
-		$treeid = array_search($treename, $treenames);
+		if(!isset($othertree) || $treename != $othertree) {
+			ut_print_leaves($treenames, $treename, $tree);
+		}
+		++$treeid;
+	}
+	if(isset($othertree) && isset($fulltree['tree'][$othertree])) {
+		ut_print_leaves($treenames, $othertree, $fulltree['tree'][$othertree]);
+	}
+}
+
+// Yeah .. well I want this functionality and it's my plugin, so bite me.
+function ut_print_leaves($treenames, $treename, $tree) {
+	$treeid = array_search($treename, $treenames);
 // Tempted to remove this option.  Wierd shit can happen if you don't sort the
 // leaves of a tree ... like the tree base not appearing properly.
 // Even ugly code won't work here since leaf structures can get deep and
 // complex.
-		if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
-			ksort($tree['id'], SORT_STRING);
-		}
-		$lid = 1;
-		foreach($tree['id'] as $leafid => $leaf) {
-			print "ou".$leaf['tier']." = insFld(";
+	if(read_config_option("unifiedtrees_sort_leaves") == 'on') {
+		ksort($tree['id'], SORT_STRING);
+	}
+	$lid = 1;
+	foreach($tree['id'] as $leafid => $leaf) {
+		print "ou".$leaf['tier']." = insFld(";
 // I may want to fix one issue with not properly sorting the tree by moving
 // the tier 0 case out of this loop, since tier 0 should be part of the root
 // definition of a tree.  Maybe in 0.6 when I feel like screwing with it.
 // Thing is, some other weird shit happens too, so sorting is still strongly
 // recommended.
-			if($leaf['tier'] == 0) {
-				print "foldersTree";
-				$xid = $treeid;
-			}else{
-				print "ou".($leaf['tier']-1);
-				$xid = $treeid."_".$lid;
-				++$lid;
-			}
-			print ", gFld(\"";
-			if($leaf['host_id'] > 0) {
-				print "Host: ";
-			}
-			$leaf['url'] .= "&amp;xID=$xid";
-			print $leaf['name']."\", \"".$leaf['url']."\"))
-ou".$leaf['tier'].".xID = \"".$xid."\"\n";
+		if($leaf['tier'] == 0) {
+			print "foldersTree";
+			$xid = $treeid;
+		}else{
+			print "ou".($leaf['tier']-1);
+			$xid = $treeid."_".$lid;
+			++$lid;
 		}
-		++$treeid;
+		print ", gFld(\"";
+		if($leaf['host_id'] > 0) {
+			print "Host: ";
+		}
+		$leaf['url'] .= "&amp;xID=$xid";
+		print $leaf['name']."\", \"".$leaf['url']."\"))
+ou".$leaf['tier'].".xID = \"".$xid."\"\n";
 	}
 }
+
 ?>

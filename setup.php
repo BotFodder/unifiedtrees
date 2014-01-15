@@ -103,7 +103,7 @@ function unifiedtrees_check_upgrade () {
 function plugin_unifiedtrees_version () {
 	return array(
 		'name'     => 'unifiedtrees',
-			'version'  => '0.6',
+			'version'  => '0.7',
 			'longname' => 'Unified Trees',
 			'author'   => 'Eric Stewart',
 			'homepage' => 'http://runningoffatthemouth.com/?p=1089',
@@ -191,6 +191,13 @@ function ut_config_settings () {
 			'description' => "This will sort (alphabetically) all the branches/leaves of a tree once they've been pulled from all databases.  There should be no objection to this; because of how the different databases are processed, failure to sort the leaves may result in trees not displaying properly (including some information not appearing at all).",
 			'method' => 'checkbox',
 			'default' => 'on',
+			),
+		'unifiedtrees_other_tree' => array(
+			'friendly_name' => "'Other' Tree",
+			'description' => "If you don't sort your trees, but have a catch-all tree, enter the tree name here, and it should be forced to show up at the end of the list of trees when printed.",
+			'method' => "textbox",
+			'max_length' => 255,
+			"default" => "",
 			),
 		'unifiedtrees_disable_bad_connection' => array(
 			'friendly_name' => "Disable Problem Servers",
