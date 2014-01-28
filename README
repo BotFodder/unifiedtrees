@@ -40,6 +40,9 @@ every other install.
 
 ----[ Changelog
 
+    --- 0.71 ---
+    I needed more frequent building of the tree.
+
     --- 0.7 ---
     Minor new feature triggered by a development site need: "Other" tree.
     Set the name of a tree you want to show up at the very end of the list of

@@ -103,7 +103,7 @@ function unifiedtrees_check_upgrade () {
 function plugin_unifiedtrees_version () {
 	return array(
 		'name'     => 'unifiedtrees',
-			'version'  => '0.7',
+			'version'  => '0.71',
 			'longname' => 'Unified Trees',
 			'author'   => 'Eric Stewart',
 			'homepage' => 'http://runningoffatthemouth.com/?p=1089',
@@ -240,6 +240,8 @@ function ut_config_arrays () {
 	$ut_tree_build_freq = array(
 		"always" => "Always",
 		"client" => "Client",
+		"15" => "Every 15 Minutes",
+		"30" => "Every 30 Minutes",
 		"60" => "Every 1 Hour",
 		"120" => "Every 2 Hours",
 		"240" => "Every 4 Hours",
