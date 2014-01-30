@@ -1,5 +1,14 @@
 This is where I theorize about what I may be doing with UT in the future.
 
+20140130 - With the Master/Slave setup out of the way, the next thing on my
+list could be a way to manually order the trees on a master.  In our case, we
+have four campuses, a data center, and various remote sites, and the "Other"
+tree that came about in an earlier version of UT.  Thing is, there's no handy
+automated order that puts our trees in the preferred order.  So, maybe I'll have
+a persistent table on the servers that lists the existing tables, and allows the
+admin to put the tables in a desired order.  Then the order ID will be used by
+the clients to render the trees in the desired order.
+
 20131225 - Yes, thinking about stuff on Christmas.  I'm beginning to wonder if
 a large number of tree sources might result in slow render times for UT.  To
 avoid this, I'm thinking of setting up an optional "master/slave" setup, where:
