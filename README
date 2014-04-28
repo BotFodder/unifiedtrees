@@ -37,6 +37,27 @@ every other install.
 	For more information on this plugin
 	http://runningoffatthemouth.com/?p=1089
 
+----[ Warnings
+
+ - Currently, the install process requires patching the file lib/html_tree.php
+	for UT to work.  There's a lot that can cause this process to fail.
+	As such, support for using a Cacti other than version 0.8.8b downloaded
+	from the "Linux/Unix in tar.gz format" link on the Cacti Downloads page
+	is extremely limited (read: "mostly not supported").  Submitting Issues
+	or requests for assitance for a version of Cacti obtained any other way
+	will not be a priority and the author reserves the right to tell you
+	"Too bad, I can't help you."
+
+ - If you've downloaded the "Windows ZIP" version of the code, the patch
+ 	process will fail.  You must use the "Linux/Unix tar.gz" version, or
+ 	convert lib/html_tree.php from "dos" to "unix" version prior to
+ 	patching.
+ 
+ - Repository provided versions of Cacti, even if they are advertised as
+ 	being version 0.8.8b, are unsupported.  As an example, the
+ 	lib/html_tree.php provided by EPEL's Cacti package is significantly
+ 	different from the Cacti source provided version, and patching the
+ 	EPEL version will not fully succeed.
 
 ----[ Changelog
     --- 0.8 ---
