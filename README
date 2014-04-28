@@ -39,6 +39,19 @@ every other install.
 
 
 ----[ Changelog
+    --- 0.8 ---
+    I ran into a situation where some hosts were homed on the wrong Cacti
+    host, but I also wanted to come up with a way to maintain the old data on
+    the original host.  UT now checks if a host is "disabled" when building
+    the tree and appends a " (D)" to the hostname.  This avoids disabled
+    hosts colliding with active ones, but note:
+    - This still means you can't have more than one active host or the names
+      will collide and your master tree will only show one of them;
+    - This also means that you can have only one disabled host as well, and
+      having more than one will result in collisions.
+    - Your alternative? Change the hostname of disabled hosts manually.
+      Sorry, I have no other alternatives.
+    - Other alternative?  Move disabled hosts to a different leaf.
 
     --- 0.71 ---
     I needed more frequent building of the tree.

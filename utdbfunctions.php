@@ -122,7 +122,7 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['url'] = $db['base_url']."g
 $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
 			}
 			$currenttier = 0;
-			$treeitems = db_fetch_assoc("SELECT graph_tree_items.*, host.description
+			$treeitems = db_fetch_assoc("SELECT graph_tree_items.*, host.description, host.disabled
  FROM graph_tree_items
  LEFT JOIN host
  ON (graph_tree_items.host_id=host.id)
@@ -130,12 +130,15 @@ $fulltree['tree'][$tree['name']]['id'][$tiername[0]]['host_id'] = 0;
  ORDER BY graph_tree_items.order_key", TRUE, $db['dbconn']);
 			utdb_debug("Treeitems: ".sizeof($treeitems)."\n");
 			if (is_array($treeitems)) {
-				foreach($treeitems as $treeitem) {
+				foreach($treeitems as &$treeitem) {
 					$tier = tree_tier($treeitem['order_key']);
 $url = $db['base_url']."graph_view.php?action=tree&amp;tree_id=".$tree['id']."&amp;leaf_id=".$treeitem['id'];
 if(isset($treeitem['title']) && $treeitem['title'] != "" && $treeitem['host_id'] == 0) {
 	$stn = $treeitem['title']."|".$tier;
 }elseif(isset($treeitem['description']) && $treeitem['host_id'] != 0) {
+	if($treeitem['disabled'] == "on") {
+		$treeitem['description'] = $treeitem['description']." (D)";
+	}
 	$stn = $treeitem['description']."|".$tier;
 }else{
 	utdb_debug("No host_id/title\n");
