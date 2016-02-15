@@ -1,16 +1,16 @@
 <?php
 /*---------------------------------------------------------------------------+
- | Copyright (C) 2013 Eric Stewart                                           |
- |                                                                           |
+ | Copyright (C) 2013 Eric Stewart					   |
+ |									   |
  | This program is free software; you can redistribute it and/or	     |
- | modify it under the terms of the GNU General Public License               |
- | as published by the Free Software Foundation; either version 2            |
- | of the License, or (at your option) any later version.                    |
- |                                                                           |
- | This program is distributed in the hope that it will be useful,           |
- | but WITHOUT ANY WARRANTY; without even the implied warranty of            |
+ | modify it under the terms of the GNU General Public License	       |
+ | as published by the Free Software Foundation; either version 2	    |
+ | of the License, or (at your option) any later version.		    |
+ |									   |
+ | This program is distributed in the hope that it will be useful,	   |
+ | but WITHOUT ANY WARRANTY; without even the implied warranty of	    |
  | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the	     |
- | GNU General Public License for more details.                              |
+ | GNU General Public License for more details.			      |
  +---------------------------------------------------------------------------+
  | Unified Trees: Cacti Plugin to unify trees from multiple Cacti servers    |
  +---------------------------------------------------------------------------+
@@ -149,8 +149,9 @@ function ut_print_local_tree() {
 
 function ut_print_tree($fulltree) {
 	$othertree = read_config_option("unifiedtrees_other_tree");
-	print "foldersTree = gFld(\"\", \"\")
-foldersTree.xID = \"root\"\n";
+//	print "foldersTree = gFld(\"\", \"\")
+// foldersTree.xID = \"root\"\n";
+	print "\n<div id=\"jstree\">\n";
 // I'd remove this to avoid multiserver/always treeid issues excempt that in
 // my own case I have a "T" that needs to come before any "S".  Oh well.
 // We can fix that with some ugly code.
@@ -168,6 +169,81 @@ foldersTree.xID = \"root\"\n";
 	if(isset($othertree) && isset($fulltree['tree'][$othertree])) {
 		ut_print_leaves($treenames, $othertree, $fulltree['tree'][$othertree]);
 	}
+	print "</div>\n";
+	?>
+	<script type='text/javascript'>
+<?php
+	if ((!isset($_SESSION['sess_node_id']) && !isset($_REQUEST['tree_id'])) || isset($_REQUEST['select_first'])) {
+		print "var node='tree_" . $default_tree_id . "';\n";
+		print "var reset=true;\n";
+	}elseif (isset($_REQUEST['nodeid']) && $_REQUEST['nodeid'] != '') {
+		print "var node='" . $_REQUEST['nodeid'] . "';\n";
+		print "var reset=false;\n";
+	}elseif (isset($_REQUEST['tree_id'])) {
+		print "var node='tree_" . $_REQUEST['tree_id'] . "';\n";
+		print "var reset=false;\n";
+	}elseif (isset($_SESSION['sess_node_id']) && $_SESSION['sess_node_id'] != '') {
+		print "var node='" . $_SESSION['sess_node_id'] . "';\n";
+		print "var reset=false;\n";
+	}else{
+		print "var node='';\n";
+		print "var reset=true;\n";
+	}
+	if (isset($_REQUEST['leaf_id'])) {
+		print "var leaf='" . $_REQUEST['leaf_id'] . "';\n";
+	}else{
+		print "var leaf='';\n";
+	}
+?>
+	$(function () {
+		$('#navigation').css('height', ($(window).height()-80)+'px');
+		$(window).resize(function() {
+			$('#navigation').css('height', ($(window).height()-80)+'px');
+		});
+
+		$("#jstree")
+		.on('ready.jstree', function(e, data) {
+			if (reset == true) {
+				$('#jstree').jstree('clear_state');
+			}
+			if (node!='') {
+				$('#jstree').jstree('set_theme', 'default', '<?php print $config['url_path'];?>include/js/themes/default/style.css');
+				$('#jstree').jstree('deselect_all');
+				$('#jstree').jstree('select_node', node);
+				$.get($('#'+node+'_anchor').attr('href').replace('leaf_id=&', 'leaf_id='+leaf+'&').replace('action=tree', 'action=tree_content')+"&nodeid="+node, function(data) {
+					$('#main').html(data);
+				});
+			}
+
+			$('#navigation').show();
+		})
+		.on('set_state.jstree', function(e, data) {
+			$('#jstree').jstree('deselect_all');
+			$('#jstree').jstree('select_node', node);
+		})
+		.on('activate_node.jstree', function(e, data) {
+			if (data.node.id) {
+				$.get($('#'+data.node.id+'_anchor').attr('href').replace('action=tree', 'action=tree_content')+"&nodeid="+data.node.id, function(data) {
+					$('#main').html(data);
+				});
+				node = data.node.id;
+			}
+		})
+		.jstree({
+			'core' : {
+				'animation' : 0
+			},
+			'themes' : {
+				'name' : 'default',
+				'responsive' : true,
+				'url' : true,
+				'dots' : true
+			},
+			'plugins' : [ 'state', 'wholerow' ]
+		});
+	});
+	</script>
+<?php
 }
 
 // Yeah .. well I want this functionality and it's my plugin, so bite me.
@@ -181,28 +257,68 @@ function ut_print_leaves($treenames, $treename, $tree) {
 		ksort($tree['id'], SORT_STRING);
 	}
 	$lid = 1;
+	print "<ul>\n";
+	$currtier = 0;
 	foreach($tree['id'] as $leafid => $leaf) {
-		print "ou".$leaf['tier']." = insFld(";
+//		print "ou".$leaf['tier']." = insFld(";
 // I may want to fix one issue with not properly sorting the tree by moving
 // the tier 0 case out of this loop, since tier 0 should be part of the root
 // definition of a tree.  Maybe in 0.6 when I feel like screwing with it.
 // Thing is, some other weird shit happens too, so sorting is still strongly
 // recommended.
+// In > 0.8.8b, they started using "node" where xID was used.
+		if($currtier < $leaf['tier']) {
+			ut_print_spaces($currtier);
+			print "<ul>\n";
+		}elseif ($currtier > $leaf['tier']) {
+			for($i = $currtier; $i > $leaf['tier']; $i--) {
+				ut_print_spaces($i);
+				print "</ul>\n";
+				ut_print_spaces($i);
+				print "</li>\n";
+			}
+		}
+		$currtier = $leaf['tier'];
 		if($leaf['tier'] == 0) {
-			print "foldersTree";
-			$xid = $treeid;
+//			print "foldersTree";
+			$xid = "tree_".$treeid;
 		}else{
-			print "ou".($leaf['tier']-1);
-			$xid = $treeid."_".$lid;
+//			print "ou".($leaf['tier']-1);
+			$xid = "node".$treeid."_".$lid;
 			++$lid;
 		}
-		print ", gFld(\"";
+//		print ", gFld(\"";
+		$leaf['url'] .= "&amp;nodeid=$xid";
+		ut_print_spaces($leaf['tier']);
+		print "<li id='$xid'";
+		if($leaf['host_id'] > 0) {
+//			print "Host: ";
+			print " data-jstree='{\"icon\" : \"/images/server.png\" }'";
+		}
+		print "><a class='treepick' href=\"".$leaf['url']."&amp;host_group_data=\">";
 		if($leaf['host_id'] > 0) {
 			print "Host: ";
 		}
-		$leaf['url'] .= "&amp;xID=$xid";
-		print $leaf['name']."\", \"".$leaf['url']."\"))
-ou".$leaf['tier'].".xID = \"".$xid."\"\n";
+		print $leaf['name']."</a>\n";
+		ut_print_spaces($leaf['tier']);
+		if($leaf['host_id'] > 0) {
+			print "</li>\n";
+		}
+// $leaf['name']."\", \"".$leaf['url']."\"))
+// ou".$leaf['tier'].".xID = \"".$xid."\"\n";
+	}
+	for ($i = $currtier; $i > 0; $i--) {
+		ut_print_spaces($i-1);
+		print "</ul>\n";
+		ut_print_spaces($i-1);
+		print "</li>\n";
+	}
+	print "</ul>\n";
+}
+
+function ut_print_spaces($tier) {
+	for ($i = 0; $i <= $tier; $i++) {
+		print "    ";
 	}
 }
 

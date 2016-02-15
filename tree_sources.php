@@ -66,20 +66,20 @@ function form_save() {
 		$redirect_back = true;
 
 		$save["id"] = $_POST["id"];
-		$save["db_type"] = sql_sanitize($_POST["db_type"]);
-		$save["db_address"] = sql_sanitize($_POST["db_address"]);
-		$save["db_name"] = sql_sanitize($_POST["db_name"]);
-		$save["db_uname"] = sql_sanitize($_POST["db_uname"]);
-		$save["db_pword"] = sql_sanitize($_POST["db_pword"]);
+		$save["db_type"] = $_POST["db_type"];
+		$save["db_address"] = $_POST["db_address"];
+		$save["db_name"] = $_POST["db_name"];
+		$save["db_uname"] = $_POST["db_uname"];
+		$save["db_pword"] = $_POST["db_pword"];
 		$save["db_port"] = form_input_validate($_POST["db_port"], "db_port", "^[0-9]*$", true, 3);
-		$save["db_ssl"] = sql_sanitize($_POST["db_ssl"]);
+		$save["db_ssl"] = $_POST["db_ssl"];
 		$save["db_retries"] = form_input_validate($_POST["db_retries"], "db_retries", "^[0-9]*$", true, 3);
-		$save["base_url"] = sql_sanitize($_POST["base_url"]);
+		$save["base_url"] = $_POST["base_url"];
 // NEED: Connectivity test
 		if(ut_db_conntest($save) === FALSE) {
 			$save["enable_db"] = '';
 		}else{
-			$save["enable_db"] = sql_sanitize($_POST["enable_db"]);
+			$save["enable_db"] = $_POST["enable_db"];
 		}
 
 		if (!is_error_message() && !empty($save["db_address"])) {

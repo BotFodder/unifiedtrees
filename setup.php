@@ -41,6 +41,7 @@ function plugin_unifiedtrees_install () {
 	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'utilities_action', 'ut_utilities_action', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'utilities_list', 'ut_utilities_list', 'setup.php');
+	api_plugin_register_hook('unifiedtrees', 'top_graph_header', 'ut_top_graph_header', 'setup.php');
 
 	api_plugin_register_realm('unifiedtrees', 'tree_sources.php', 'Set Source Trees', 1);
 
@@ -91,6 +92,7 @@ function unifiedtrees_check_upgrade () {
 				"WHERE directory='" . $version["name"] . "' ");
 	}
 	// These are new, and if we've been upgraded from 0.1, may not exist.
+	api_plugin_register_hook('unifiedtrees', 'top_graph_header', 'ut_top_graph_header', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'poller_bottom', 'ut_poller_bottom', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'utilities_action', 'ut_utilities_action', 'setup.php');
 	api_plugin_register_hook('unifiedtrees', 'utilities_list', 'ut_utilities_list', 'setup.php');
@@ -103,7 +105,7 @@ function unifiedtrees_check_upgrade () {
 function plugin_unifiedtrees_version () {
 	return array(
 		'name'     => 'unifiedtrees',
-			'version'  => '0.8',
+			'version'  => '1.0',
 			'longname' => 'Unified Trees',
 			'author'   => 'Eric Stewart',
 			'homepage' => 'http://runningoffatthemouth.com/?p=1089',
@@ -315,6 +317,14 @@ function ut_poller_bottom() {
 		$sql = "UPDATE settings SET value = '".time()."' WHERE name='unifiedtrees_last_build'";
 	}
 	db_execute($sql);
+}
+
+function ut_top_graph_header() {
+	global $config;
+
+	include($config["base_path"] . '/plugins/unifiedtrees/ut_top_graph_header.php');
+	print "<!-- return -->\n";
+	return 1;
 }
 
 ?>
