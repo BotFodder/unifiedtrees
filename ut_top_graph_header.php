@@ -39,6 +39,8 @@ if ($oper_mode == OPER_MODE_RESKIN) {
 	return;
 }
 */
+/* Dangerous maybe */
+$oper_mode = OPER_MODE_NATIVE;
 print "<!-- unifiedtrees -->\n";
 
 /* ================= input validation ================= */
