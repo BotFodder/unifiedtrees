@@ -184,7 +184,7 @@ function ut_print_tree($fulltree) {
 		print "var reset=false;\n";
 	}elseif (isset($treenode)) {
 		print "var node='".$treenode."';\n";
-		print "var reset=false;\n";
+		print "var reset=true;\n";
 	}elseif (isset($_REQUEST['tree_id'])) {
 		print "var node='tree_" . $_REQUEST['tree_id'] . "';\n";
 		print "var reset=false;\n";
