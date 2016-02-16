@@ -148,7 +148,10 @@ function ut_print_local_tree() {
 }
 
 function ut_print_tree($fulltree) {
+	global $treenode;
 	$othertree = read_config_option("unifiedtrees_other_tree");
+	$default_tree_id = read_graph_config_option('default_tree_id');
+	$our_base = read_config_option("unifiedtrees_base_url");
 //	print "foldersTree = gFld(\"\", \"\")
 // foldersTree.xID = \"root\"\n";
 	print "\n<div id=\"jstree\">\n";
@@ -179,6 +182,9 @@ function ut_print_tree($fulltree) {
 	}elseif (isset($_REQUEST['nodeid']) && $_REQUEST['nodeid'] != '') {
 		print "var node='" . $_REQUEST['nodeid'] . "';\n";
 		print "var reset=false;\n";
+	}elseif (isset($treenode)) {
+		print "var node='".$treenode."';\n";
+		print "var reset=false;\n";
 	}elseif (isset($_REQUEST['tree_id'])) {
 		print "var node='tree_" . $_REQUEST['tree_id'] . "';\n";
 		print "var reset=false;\n";
@@ -194,6 +200,7 @@ function ut_print_tree($fulltree) {
 	}else{
 		print "var leaf='';\n";
 	}
+	print "var ourbase='".$our_base."'\n";
 ?>
 	$(function () {
 		$('#navigation').css('height', ($(window).height()-80)+'px');
@@ -222,11 +229,16 @@ function ut_print_tree($fulltree) {
 			$('#jstree').jstree('select_node', node);
 		})
 		.on('activate_node.jstree', function(e, data) {
+			if (!data.node.a_attr.href.includes(ourbase)) {
+				window.location.href = data.node.a_attr.href;
+			}
 			if (data.node.id) {
 				$.get($('#'+data.node.id+'_anchor').attr('href').replace('action=tree', 'action=tree_content')+"&nodeid="+data.node.id, function(data) {
 					$('#main').html(data);
 				});
 				node = data.node.id;
+			} else {
+				window.location.href = data.node.a_attr.href;
 			}
 		})
 		.jstree({
@@ -248,6 +260,8 @@ function ut_print_tree($fulltree) {
 
 // Yeah .. well I want this functionality and it's my plugin, so bite me.
 function ut_print_leaves($treenames, $treename, $tree) {
+	global $treenode;
+	$our_base = read_config_option("unifiedtrees_base_url");
 	$treeid = array_search($treename, $treenames);
 // Tempted to remove this option.  Wierd shit can happen if you don't sort the
 // leaves of a tree ... like the tree base not appearing properly.
@@ -288,7 +302,19 @@ function ut_print_leaves($treenames, $treename, $tree) {
 			++$lid;
 		}
 //		print ", gFld(\"";
-		$leaf['url'] .= "&amp;nodeid=$xid";
+		$leaf['node'] = $xid;
+		if(isset($_REQUEST['tree_id']) && (!isset($treenode) || $treenode == "")) {
+$urltest = $our_base."graph_view.php?action=tree&amp;tree_id=".$_REQUEST['tree_id'];
+if(isset($_REQUEST['leaf_id'])) {
+	$urltest .= "&amp;leaf_id=".$_REQUEST['leaf_id'];
+}
+if($leaf['url'] == $urltest && (!isset($treenode) || $treenode == "")) {
+	$treenode = $xid;
+}
+		}
+		if(strpos($leaf['url'], $our_base) !== FALSE) {
+			$leaf['url'] .= "&amp;nodeid=$xid";
+		}
 		ut_print_spaces($leaf['tier']);
 		print "<li id='$xid'";
 		if($leaf['host_id'] > 0) {
@@ -317,7 +343,7 @@ function ut_print_leaves($treenames, $treename, $tree) {
 }
 
 function ut_print_spaces($tier) {
-	for ($i = 0; $i <= $tier; $i++) {
+	for ($i = 1; $i <= $tier; $i++) {
 		print "    ";
 	}
 }
