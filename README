@@ -40,9 +40,10 @@ every other install.
 ----[ Warnings
 
  - This version of Unified Trees is only supported on 0.8.8f.  It will likely
-	not work in a mixed environment and probably won't work on anything
-	prior to 0.8.8c.  For 0.8.8b, look for the 0.8 release or the branch on
-	the GitHub repo.
+	may work in a mixed environment (IE, older versions of Cacti/UT); the
+	plugin itself probably won't work on anything prior to 0.8.8c (c, d,
+	and e *may* work with the plugin, but are unsupported).  For 0.8.8b,
+	look for the 0.8 release or the branch on the GitHub repo.
 
  - This version *DOES NOT* require patching.  However, it does use the plugin
 	architecture to replace top_graph_header.php and contains it's own
@@ -57,6 +58,7 @@ every other install.
  	EPEL version will not fully succeed.
 
 ----[ Changelog
+
     --- 1.0 ---
     Attempting to make a version that looks like/runs on 0.8.8f.
     --- 0.8 ---
