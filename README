@@ -4,7 +4,7 @@
     Contact ........ botfodder@gmail.com
     Home Site ...... http://runningoffatthemouth.com
     Program ........ Unified Trees
-    Version ........ 1.0
+    Version ........ 1.01
     Purpose ........ Pull Tree information from other Cacti installs
 
 *******************************************************************************/
@@ -59,6 +59,8 @@ every other install.
 
 ----[ Changelog
 
+    --- 1.01 ---
+    This involves a fix handling the "Use UT" setting a little better.
     --- 1.0 ---
     Attempting to make a version that looks like/runs on 0.8.8f.
     --- 0.8 ---

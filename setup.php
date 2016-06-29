@@ -105,7 +105,7 @@ function unifiedtrees_check_upgrade () {
 function plugin_unifiedtrees_version () {
 	return array(
 		'name'     => 'unifiedtrees',
-			'version'  => '1.0',
+			'version'  => '1.01',
 			'longname' => 'Unified Trees',
 			'author'   => 'Eric Stewart',
 			'homepage' => 'http://runningoffatthemouth.com/?p=1089',
@@ -321,10 +321,14 @@ function ut_poller_bottom() {
 
 function ut_top_graph_header() {
 	global $config;
-
-	include($config["base_path"] . '/plugins/unifiedtrees/ut_top_graph_header.php');
-	print "<!-- return -->\n";
-	return 1;
+	$ut_enabled = read_config_option("unifiedtrees_use_ut");
+	if($ut_enabled == "on") {
+		include($config["base_path"] . '/plugins/unifiedtrees/ut_top_graph_header.php');
+		print "<!-- return -->\n";
+		return 1;
+	}else{
+		print "<!-- unifiedtrees_use_ut is not 'on' -->\n";
+	}
 }
 
 ?>
